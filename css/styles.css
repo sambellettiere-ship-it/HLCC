@@ -840,13 +840,13 @@ section {
    PRICING
    ============================================================ */
 .pricing-wrap {
-  max-width: 820px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 .pricing-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 28px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
 }
 .pricing-card {
   background: var(--bg-card);
@@ -943,6 +943,38 @@ section {
   font-size: 0.95rem;
   color: var(--text-muted);
 }
+.pricing-card.vip {
+  border-color: rgba(191,0,255,0.5);
+  background: linear-gradient(160deg, rgba(191,0,255,0.09) 0%, var(--bg-card) 55%);
+}
+.pricing-card.vip::before {
+  background: linear-gradient(90deg, var(--purple), var(--yellow));
+}
+.pricing-card.vip::after {
+  content: 'VIP';
+  position: absolute;
+  top: 16px; right: 16px;
+  background: linear-gradient(135deg, var(--purple), var(--yellow));
+  color: var(--bg);
+  font-family: var(--font-head);
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.pricing-card.tier1 .pricing-tier { color: var(--green); }
+.pricing-card.tier1 .pricing-tier::after {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  margin-left: 8px;
+  box-shadow: var(--glow-green);
+}
+.pricing-card.vip .pricing-tier { color: var(--purple); }
+
 .pricing-features li .check {
   width: 20px; height: 20px;
   background: rgba(0,255,153,0.1);
@@ -1316,6 +1348,7 @@ section {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .community-inner { gap: 40px; }
   .about-intro { grid-template-columns: 1fr; gap: 40px; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
 }
 
 @media (max-width: 768px) {
@@ -1339,7 +1372,7 @@ section {
   }
 
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
   .contact-layout { grid-template-columns: 1fr; }
   .community-inner { grid-template-columns: 1fr; }
   .footer__grid { grid-template-columns: 1fr; }
