@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Events & Calendar | Hidden Level Cyber Cafe</title>
+  <meta name="description" content="Events at Hidden Level Cyber Cafe — Better Together Night every Friday, Family Game Night monthly, and private bookings available." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body data-page="calendar">
+
+<!-- ══ NAVIGATION ══════════════════════════════════════════ -->
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__logo">
+      <span class="mark">HL</span>
+      HIDDEN <span class="accent">LEVEL</span>
+    </a>
+    <ul class="nav__links" id="nav-links">
+      <li><a href="index.html" data-page="home">Home</a></li>
+      <li><a href="about.html" data-page="about">About</a></li>
+      <li><a href="calendar.html" data-page="calendar">Events</a></li>
+      <li><a href="pricing.html" data-page="pricing">Pricing</a></li>
+      <li><a href="contact.html" data-page="contact">Contact</a></li>
+      <li>
+        <a href="https://discord.gg/w6xh7fzxr3"
+           target="_blank" rel="noopener noreferrer"
+           class="btn btn-discord" style="padding:8px 16px;font-size:0.65rem;">
+          Join Discord
+        </a>
+      </li>
+    </ul>
+    <button class="nav__hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-links">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- PAGE HERO -->
+  <div class="page-hero">
+    <span class="eyebrow">What's On</span>
+    <h1>Events &amp; Calendar</h1>
+    <p>Regular community nights, family sessions, and private bookings — there's always a reason to come back.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- EVENT TYPES -->
+  <section>
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Regular Events</div>
+        <h2 class="section-title">What's <span class="gradient-text">Happening</span></h2>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:64px;">
+
+        <!-- Better Together Night -->
+        <div class="event-item reveal">
+          <div class="event-item__date">
+            <span class="day">FRI</span>
+            <span class="month">Weekly</span>
+          </div>
+          <div class="event-item__info" style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+              <h3 style="margin-bottom:0;">Better Together Night</h3>
+              <span class="badge community">Community</span>
+              <span class="badge recurring">Every Friday</span>
+            </div>
+            <p>
+              Our flagship weekly event. Locals come together for shared gaming experiences,
+              friendly competition, and straight-up good vibes. All skill levels welcome —
+              whether you're a competitive player or just here to have fun.
+            </p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+              <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer"
+                 class="btn btn-outline" style="font-size:0.65rem;padding:10px 20px;">
+                Join Discord for Details
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Family Game Night -->
+        <div class="event-item reveal">
+          <div class="event-item__date">
+            <span class="day">SAT</span>
+            <span class="month">Monthly</span>
+          </div>
+          <div class="event-item__info" style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+              <h3 style="margin-bottom:0;">Family Game Night</h3>
+              <span class="badge family">Family</span>
+              <span class="badge recurring">2nd Saturday</span>
+            </div>
+            <p>
+              Every second Saturday of the month we open up the café for families and all ages.
+              Kid-friendly titles, team-based games, and a welcoming environment for everyone
+              from beginners to pros.
+            </p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+              <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer"
+                 class="btn btn-outline" style="font-size:0.65rem;padding:10px 20px;">
+                Stay Updated on Discord
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Private Bookings -->
+        <div class="event-item reveal">
+          <div class="event-item__date">
+            <span class="day" style="font-size:1rem;">ANY</span>
+            <span class="month">By Appt</span>
+          </div>
+          <div class="event-item__info" style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+              <h3 style="margin-bottom:0;">Private Bookings</h3>
+              <span class="badge private">Private</span>
+            </div>
+            <p>
+              Reserve Hidden Level for your birthday party, group outing, corporate team event,
+              or private gaming tournament. We'll work with you to set up the perfect experience —
+              contact us to discuss availability and custom packages.
+            </p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+              <a href="contact.html" class="btn btn-primary" style="font-size:0.65rem;padding:10px 20px;">
+                Inquire About Booking
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- LEGEND -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;align-items:center;">
+        <span style="font-family:var(--font-head);font-size:0.65rem;letter-spacing:0.12em;color:var(--text-faint);text-transform:uppercase;margin-right:8px;">Legend:</span>
+        <span class="badge community">Community</span>
+        <span class="badge family">Family</span>
+        <span class="badge private">Private</span>
+        <span class="badge recurring">Recurring</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- CALENDAR VIEW -->
+  <section>
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Monthly View</div>
+        <h2 class="section-title">Event <span class="gradient-text">Calendar</span></h2>
+        <p class="section-sub">
+          Fridays are Better Together Night. The 2nd Saturday is Family Game Night.
+          Check Discord for any special events or changes.
+        </p>
+      </div>
+
+      <div class="calendar-view reveal">
+        <div class="calendar-view__header">
+          <button class="cal-nav-btn" id="cal-prev" aria-label="Previous month">&#8249;</button>
+          <div class="calendar-view__title" id="cal-title">Loading…</div>
+          <button class="cal-nav-btn" id="cal-next" aria-label="Next month">&#8250;</button>
+        </div>
+        <div class="calendar-grid" id="cal-grid">
+          <!-- Populated by main.js -->
+        </div>
+      </div>
+
+      <!-- Calendar legend -->
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:20px;padding:0 4px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:12px;background:rgba(0,255,153,0.2);border:1px solid rgba(0,255,153,0.4);border-radius:3px;display:inline-block;"></span>
+          <span style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.1em;color:var(--text-muted);text-transform:uppercase;">Better Together Night</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="width:12px;height:12px;background:rgba(191,0,255,0.2);border:1px solid rgba(191,0,255,0.4);border-radius:3px;display:inline-block;"></span>
+          <span style="font-family:var(--font-head);font-size:0.62rem;letter-spacing:0.1em;color:var(--text-muted);text-transform:uppercase;">Family Game Night</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISCORD CTA -->
+  <section>
+    <div class="container">
+      <div class="cta-box reveal" style="background:linear-gradient(135deg,rgba(88,101,242,0.12) 0%,rgba(0,229,255,0.07) 100%);border-color:rgba(88,101,242,0.35);">
+        <h2>Stay in the Loop on <span class="gradient-text">Discord</span></h2>
+        <p>
+          Event times, special nights, and last-minute updates all happen on our
+          Discord server first. Join the community to never miss a session.
+        </p>
+        <div class="btn-group">
+          <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer"
+             class="btn btn-discord">Join Our Discord</a>
+          <a href="contact.html" class="btn btn-outline">Book a Private Event</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-wrap -->
+
+<!-- ══ FOOTER ═══════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <div class="footer__logo">
+          <span class="mark">HL</span>
+          HIDDEN <span class="accent">LEVEL</span>
+        </div>
+        <p>Urbana-Champaign's gaming destination. PC stations, consoles, community events, and a space to belong.</p>
+        <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer"
+           class="btn btn-discord" style="font-size:0.65rem;padding:10px 20px;">
+          Join Our Discord
+        </a>
+      </div>
+      <div class="footer__col">
+        <h4>Navigate</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="calendar.html">Events</a></li>
+          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer__col">
+        <h4>Contact</h4>
+        <address>
+          <a href="https://maps.google.com/?q=110+E+University+Ave+Urbana+IL" target="_blank" rel="noopener noreferrer">
+            110 E University Ave<br />Suite I, Urbana IL
+          </a><br /><br />
+          <a href="tel:2174187404">217-418-7404</a><br />
+          <a href="mailto:Hiddenlevelcu@gmail.com">Hiddenlevelcu@gmail.com</a>
+        </address>
+      </div>
+      <div class="footer__col">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer">Discord Server ↗</a></li>
+          <li><a href="calendar.html">Better Together Night</a></li>
+          <li><a href="calendar.html">Family Game Night</a></li>
+          <li><a href="contact.html">Private Bookings</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© 2026 Hidden Level Cyber Cafe · Urbana, IL</p>
+      <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer" class="footer__discord">
+        💬 Join Our Discord
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
