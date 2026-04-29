@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Hidden Level</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12121a;
+      --border: rgba(255,255,255,0.08);
+      --cyan: #00e5ff;
+      --green: #00ff99;
+      --purple: #bf00ff;
+      --yellow: #ffd600;
+      --white: #f0f0ff;
+      --muted: #8888aa;
+      --faint: #44445a;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      padding: 40px 16px;
+    }
+    .container { max-width: 820px; margin: 0 auto; }
+    h1 {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--cyan);
+      margin-bottom: 4px;
+    }
+    .subtitle { color: var(--muted); font-size: 0.88rem; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+    h2 { font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 18px; }
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 14px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.08em; }
+    label:first-of-type { margin-top: 0; }
+    input, select, textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--white);
+      font-size: 0.9rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: rgba(0,229,255,0.45); }
+    textarea { resize: vertical; min-height: 76px; }
+    select option { background: #1a1a2e; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 700; cursor: pointer; border: none; font-family: inherit;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--cyan)); color: #000; margin-top: 18px; }
+    .btn-danger {
+      background: rgba(255,60,60,0.12); color: #ff6666;
+      border: 1px solid rgba(255,60,60,0.25); padding: 6px 12px;
+      font-size: 0.72rem; margin-top: 0; border-radius: 6px;
+    }
+    .btn-danger:hover { background: rgba(255,60,60,0.22); }
+    .btn-logout {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 8px 16px; font-size: 0.78rem; border-radius: 7px; margin-top: 0;
+    }
+    .btn-logout:hover { border-color: var(--muted); color: var(--white); }
+    .msg { font-size: 0.84rem; margin-top: 10px; }
+    .msg.success { color: var(--green); }
+    .msg.error { color: #ff6666; }
+    .event-list { display: flex; flex-direction: column; gap: 10px; }
+    .event-row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+      padding: 14px 16px; background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border); border-radius: 9px;
+    }
+    .event-info { flex: 1; min-width: 0; }
+    .event-date { font-size: 0.72rem; color: var(--cyan); font-weight: 700; margin-bottom: 3px; }
+    .event-title { font-size: 0.9rem; color: var(--white); font-weight: 600; }
+    .event-desc { font-size: 0.8rem; color: var(--muted); margin-top: 3px; }
+    .pill {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-left: 8px; vertical-align: middle;
+    }
+    .pill-community { background: rgba(0,255,153,0.12); color: #00ff99; border: 1px solid rgba(0,255,153,0.3); }
+    .pill-family    { background: rgba(191,0,255,0.12); color: #d966ff; border: 1px solid rgba(191,0,255,0.3); }
+    .pill-private   { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
+    .pill-special   { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+    .empty { color: var(--muted); font-size: 0.88rem; text-align: center; padding: 28px 0; }
+    #login-section, #dashboard-section { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- LOGIN -->
+  <div id="login-section">
+    <div class="header">
+      <div>
+        <h1>Hidden Level Admin</h1>
+        <p class="subtitle">Sign in to manage calendar events.</p>
+      </div>
+    </div>
+    <div class="card" style="max-width:400px;">
+      <h2>Sign In</h2>
+      <label for="login-user">Username</label>
+      <input type="text" id="login-user" autocomplete="username" />
+      <label for="login-pass">Password</label>
+      <input type="password" id="login-pass" autocomplete="current-password" />
+      <button class="btn btn-primary" onclick="login()">Sign In</button>
+      <div id="login-msg" class="msg" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard-section">
+    <div class="header">
+      <div>
+        <h1>Hidden Level Admin</h1>
+        <p class="subtitle">Manage calendar events. <a href="/calendar.html" style="color:var(--cyan);">View calendar →</a></p>
+      </div>
+      <button class="btn btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+
+    <!-- Add Event -->
+    <div class="card">
+      <h2>Add Event</h2>
+      <div class="row">
+        <div>
+          <label for="ev-date">Date</label>
+          <input type="date" id="ev-date" />
+        </div>
+        <div>
+          <label for="ev-type">Type</label>
+          <select id="ev-type">
+            <option value="special">Special Event</option>
+            <option value="community">Community</option>
+            <option value="family">Family</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+      </div>
+      <label for="ev-title">Title</label>
+      <input type="text" id="ev-title" placeholder="e.g. Tournament Night" maxlength="100" />
+      <label for="ev-desc">Description (optional)</label>
+      <textarea id="ev-desc" placeholder="Brief description shown in event list..." maxlength="500"></textarea>
+      <button class="btn btn-primary" onclick="createEvent()">Add to Calendar</button>
+      <div id="create-msg" class="msg" style="display:none;"></div>
+    </div>
+
+    <!-- Event List -->
+    <div class="card">
+      <h2>Custom Events</h2>
+      <div id="event-list" class="event-list">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+'use strict';
+let creds = null;
+
+function authHeader() {
+  return 'Basic ' + btoa(creds.u + ':' + creds.p);
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+async function login() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const msgEl = document.getElementById('login-msg');
+  msgEl.style.display = 'none';
+
+  if (!u || !p) {
+    showMsg(msgEl, 'error', 'Enter username and password.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ping', {
+      headers: { Authorization: 'Basic ' + btoa(u + ':' + p) },
+    });
+    if (res.status === 401) {
+      showMsg(msgEl, 'error', 'Incorrect username or password.');
+      return;
+    }
+    if (!res.ok) {
+      showMsg(msgEl, 'error', 'Server error. Check that ADMIN_USERNAME and ADMIN_PASSWORD are set.');
+      return;
+    }
+    creds = { u, p };
+    sessionStorage.setItem('hl_admin', btoa(u + ':' + p));
+    showDashboard();
+  } catch {
+    showMsg(msgEl, 'error', 'Could not reach the server.');
+  }
+}
+
+function logout() {
+  creds = null;
+  sessionStorage.removeItem('hl_admin');
+  document.getElementById('dashboard-section').style.display = 'none';
+  document.getElementById('login-section').style.display = 'block';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+function showDashboard() {
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('dashboard-section').style.display = 'block';
+  loadEvents();
+}
+
+async function loadEvents() {
+  const listEl = document.getElementById('event-list');
+  try {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+
+    if (!Array.isArray(events) || !events.length) {
+      listEl.innerHTML = '<div class="empty">No custom events yet. Add one above.</div>';
+      return;
+    }
+
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    listEl.innerHTML = events.map(ev => `
+      <div class="event-row" id="row-${esc(ev.id)}">
+        <div class="event-info">
+          <div class="event-date">
+            ${formatDate(ev.date)}
+            <span class="pill pill-${esc(ev.type)}">${esc(ev.type)}</span>
+          </div>
+          <div class="event-title">${esc(ev.title)}</div>
+          ${ev.description ? `<div class="event-desc">${esc(ev.description)}</div>` : ''}
+        </div>
+        <button class="btn btn-danger" onclick="deleteEvent('${esc(ev.id)}')">Delete</button>
+      </div>`).join('');
+  } catch {
+    listEl.innerHTML = '<div class="empty" style="color:#ff6666;">Failed to load events.</div>';
+  }
+}
+
+async function createEvent() {
+  const date = document.getElementById('ev-date').value;
+  const title = document.getElementById('ev-title').value.trim();
+  const type = document.getElementById('ev-type').value;
+  const description = document.getElementById('ev-desc').value.trim();
+  const msgEl = document.getElementById('create-msg');
+  msgEl.style.display = 'none';
+
+  if (!date || !title) {
+    showMsg(msgEl, 'error', 'Date and title are required.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ date, title, type, description }),
+    });
+
+    if (res.status === 401) {
+      showMsg(msgEl, 'error', 'Session expired — please sign out and sign back in.');
+      return;
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showMsg(msgEl, 'error', data.error || 'Failed to create event.');
+      return;
+    }
+
+    document.getElementById('ev-date').value = '';
+    document.getElementById('ev-title').value = '';
+    document.getElementById('ev-desc').value = '';
+    showMsg(msgEl, 'success', 'Event added to calendar.');
+    loadEvents();
+  } catch {
+    showMsg(msgEl, 'error', 'Failed to create event.');
+  }
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event from the calendar?')) return;
+  try {
+    const res = await fetch('/api/events/' + encodeURIComponent(id), {
+      method: 'DELETE',
+      headers: { Authorization: authHeader() },
+    });
+    if (res.status === 401) { alert('Session expired — please sign out and sign back in.'); return; }
+    if (res.ok) loadEvents();
+  } catch {
+    alert('Failed to delete event.');
+  }
+}
+
+function showMsg(el, type, text) {
+  el.className = 'msg ' + type;
+  el.textContent = text;
+  el.style.display = 'block';
+  if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+function formatDate(iso) {
+  const [y, m, d] = iso.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[+m - 1]} ${+d}, ${y}`;
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Restore session if available
+(function init() {
+  const saved = sessionStorage.getItem('hl_admin');
+  if (saved) {
+    try {
+      const decoded = atob(saved);
+      const sep = decoded.indexOf(':');
+      if (sep > 0) {
+        creds = { u: decoded.slice(0, sep), p: decoded.slice(sep + 1) };
+        showDashboard();
+        return;
+      }
+    } catch {}
+  }
+  document.getElementById('login-section').style.display = 'block';
+})();
+</script>
+</body>
+</html>

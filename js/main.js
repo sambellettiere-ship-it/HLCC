@@ -62,19 +62,30 @@
 })();
 
 /* ── Calendar generation ── */
-(function initCalendar() {
+(async function initCalendar() {
   const grid = document.getElementById('cal-grid');
   const titleEl = document.getElementById('cal-title');
   if (!grid || !titleEl) return;
 
-  /* Events keyed by day-of-week (0=Sun … 6=Sat) or specific dates "YYYY-MM-DD" */
+  /* Weekly recurring events: key = day-of-week (0=Sun … 6=Sat) */
   const weeklyEvents = {
-    5: [{ label: 'Better Together Night', type: 'community' }], // Every Friday
+    5: [{ label: 'Better Together Night', type: 'community' }],
   };
-  /* Monthly recurring: 2nd Saturday = family game night */
-  const monthlyEvents = {
-    family: { label: 'Family Game Night', type: 'family' },
-  };
+
+  /* Fetch admin-created custom events and index by date string YYYY-MM-DD */
+  const customByDate = {};
+  try {
+    const res = await fetch('/api/events');
+    if (res.ok) {
+      const list = await res.json();
+      list.forEach(ev => {
+        if (!customByDate[ev.date]) customByDate[ev.date] = [];
+        customByDate[ev.date].push(ev);
+      });
+    }
+  } catch {
+    /* non-fatal — calendar still shows recurring events */
+  }
 
   let viewYear, viewMonth;
   const today = new Date();
@@ -90,7 +101,7 @@
     const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    /* Find 2nd Saturday */
+    /* Find 2nd Saturday for Family Game Night */
     let satCount = 0;
     let secondSat = -1;
     for (let d = 1; d <= daysInMonth; d++) {
@@ -103,7 +114,6 @@
     const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
     let html = dows.map(d => `<div class="calendar-grid__dow">${d}</div>`).join('');
 
-    /* Blank cells before first day */
     for (let i = 0; i < firstDay; i++) {
       html += `<div class="cal-day empty"></div>`;
     }
@@ -115,6 +125,7 @@
       if (isToday) classes += ' today';
 
       let pills = '';
+
       if (weeklyEvents[dow]) {
         weeklyEvents[dow].forEach(ev => {
           pills += `<span class="cal-event-pill ${ev.type}">${ev.label}</span>`;
@@ -124,10 +135,17 @@
         pills += `<span class="cal-event-pill family">Family Night</span>`;
       }
 
+      /* Custom admin-created events */
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      if (customByDate[dateKey]) {
+        customByDate[dateKey].forEach(ev => {
+          pills += `<span class="cal-event-pill ${ev.type}">${ev.title}</span>`;
+        });
+      }
+
       html += `<div class="${classes}"><div class="cal-day__num">${d}</div>${pills}</div>`;
     }
 
-    /* Trailing blanks to complete 6-row grid */
     const total = firstDay + daysInMonth;
     const remainder = total % 7;
     if (remainder !== 0) {
@@ -139,11 +157,9 @@
     grid.innerHTML = html;
   }
 
-  /* Show next month (today is Apr 27 2026, so show May) */
   const initDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
   render(initDate.getFullYear(), initDate.getMonth());
 
-  /* Month navigation */
   document.getElementById('cal-prev')?.addEventListener('click', () => {
     let m = viewMonth - 1, y = viewYear;
     if (m < 0) { m = 11; y--; }
