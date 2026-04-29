@@ -158,9 +158,7 @@
       if (customByDate[dateKey]) {
         customByDate[dateKey].forEach(ev => {
           const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
-          const countSuffix = ev.registeredCount > 0 ? ` · ${ev.registeredCount}` : '';
-          const timeDisplay = timeStr ? `${timeStr}${countSuffix}` : (countSuffix ? countSuffix.slice(3) : '');
-          pills += pill(ev.type, ev.title, timeDisplay, ev);
+          pills += pill(ev.type, ev.title, timeStr, ev);
         });
       }
 
@@ -176,12 +174,12 @@
     /* Attach click handlers to custom event pills */
     grid.querySelectorAll('.cal-event-pill.clickable').forEach(el => {
       el.addEventListener('click', () => {
-        try { openRegModal(JSON.parse(el.dataset.event)); } catch {}
+        try { openEventModal(JSON.parse(el.dataset.event)); } catch {}
       });
       el.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          try { openRegModal(JSON.parse(el.dataset.event)); } catch {}
+          try { openEventModal(JSON.parse(el.dataset.event)); } catch {}
         }
       });
     });
@@ -233,8 +231,6 @@ function renderUpcoming(list) {
   container.innerHTML = upcoming.map(ev => {
     const fd = formatUpcomingDate(ev.date);
     const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
-    const capStr = ev.maxCapacity ? `${ev.registeredCount}/${ev.maxCapacity} registered` : `${ev.registeredCount} registered`;
-    const isFull = ev.maxCapacity && ev.registeredCount >= ev.maxCapacity;
     const dataAttr = `data-event='${JSON.stringify(ev).replace(/'/g, '&#39;')}'`;
     return `
       <button class="upcoming-card" type="button" ${dataAttr}>
@@ -247,47 +243,29 @@ function renderUpcoming(list) {
           <div class="upcoming-card__head">
             <h3>${escapeHtml(ev.title)}</h3>
             <span class="badge ${escapeHtml(ev.type)}">${escapeHtml(ev.type)}</span>
-            ${isFull ? '<span class="badge full">Full</span>' : ''}
           </div>
           ${ev.description ? `<p class="upcoming-card__desc">${escapeHtml(ev.description)}</p>` : ''}
-          <div class="upcoming-card__meta">
-            ${timeStr ? `<span>🕒 ${escapeHtml(timeStr)}</span>` : ''}
-            <span>👥 ${escapeHtml(capStr)}</span>
-          </div>
+          ${timeStr ? `<div class="upcoming-card__meta"><span>🕒 ${escapeHtml(timeStr)}</span></div>` : ''}
         </div>
-        <span class="upcoming-card__cta">${isFull ? 'View' : 'Register →'}</span>
+        <span class="upcoming-card__cta">Details →</span>
       </button>`;
   }).join('');
 
   container.querySelectorAll('.upcoming-card').forEach(el => {
     el.addEventListener('click', () => {
-      try { openRegModal(JSON.parse(el.dataset.event)); } catch {}
+      try { openEventModal(JSON.parse(el.dataset.event)); } catch {}
     });
   });
 }
 
-/* ── Registration modal ── */
-let currentEventId = null;
-
-function openRegModal(ev) {
-  currentEventId = ev.id || null;
-  const isRegisterable = !!ev.id;
-
-  const modal = document.getElementById('reg-modal');
+/* ── Event detail modal ── */
+function openEventModal(ev) {
+  const modal = document.getElementById('event-modal');
   if (!modal) return;
 
-  /* Reset state */
-  document.getElementById('modal-success-wrap').style.display = 'none';
-  const formWrap = document.getElementById('modal-form-wrap');
-  document.getElementById('reg-form').reset();
-  const msgEl = document.getElementById('reg-msg');
-  if (msgEl) msgEl.style.display = 'none';
-  document.getElementById('reg-submit').disabled = false;
-
-  /* Populate */
   const badge = document.getElementById('modal-badge');
   badge.textContent = ev.type;
-  badge.className = 'modal-event-badge ' + ev.type;
+  badge.className = 'event-modal__badge ' + ev.type;
 
   document.getElementById('modal-title').textContent = ev.title;
 
@@ -300,109 +278,28 @@ function openRegModal(ev) {
   const descEl = document.getElementById('modal-desc');
   if (ev.description) {
     descEl.textContent = ev.description;
-    descEl.style.display = 'block';
+    descEl.hidden = false;
   } else {
-    descEl.style.display = 'none';
-  }
-
-  const regStatus = document.querySelector('.modal-reg-status');
-  const divider = document.querySelector('.modal-divider');
-
-  if (!isRegisterable) {
-    /* Info-only dialog for recurring events */
-    if (regStatus) regStatus.style.display = 'none';
-    if (divider) divider.style.display = 'none';
-    formWrap.style.display = 'none';
-  } else {
-    if (regStatus) regStatus.style.display = '';
-    if (divider) divider.style.display = '';
-    formWrap.style.display = 'block';
-
-    const count = ev.registeredCount || 0;
-    document.getElementById('modal-count').textContent = count;
-    const capText = document.getElementById('modal-cap-text');
-    const fullLabel = document.getElementById('modal-full-label');
-    const submitBtn = document.getElementById('reg-submit');
-    if (ev.maxCapacity) {
-      capText.textContent = ` / ${ev.maxCapacity}`;
-      if (count >= ev.maxCapacity) {
-        fullLabel.style.display = 'inline';
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Event Full';
-      } else {
-        fullLabel.style.display = 'none';
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Register for This Event';
-      }
-    } else {
-      capText.textContent = '';
-      fullLabel.style.display = 'none';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Register for This Event';
-    }
+    descEl.hidden = true;
   }
 
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
-  if (isRegisterable) document.getElementById('reg-name').focus();
 }
 
-function closeRegModal() {
-  const modal = document.getElementById('reg-modal');
+function closeEventModal() {
+  const modal = document.getElementById('event-modal');
   if (modal) modal.hidden = true;
   document.body.style.overflow = '';
-  currentEventId = null;
 }
 
-async function submitReg(e) {
-  e.preventDefault();
-  if (!currentEventId) return;
-
-  const name = document.getElementById('reg-name').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const msgEl = document.getElementById('reg-msg');
-  const submitBtn = document.getElementById('reg-submit');
-
-  msgEl.style.display = 'none';
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Registering…';
-
-  try {
-    const res = await fetch(`/api/events/${encodeURIComponent(currentEventId)}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email }),
-    });
-    const data = await res.json().catch(() => ({}));
-
-    if (res.ok) {
-      document.getElementById('modal-form-wrap').style.display = 'none';
-      document.getElementById('modal-success-wrap').style.display = 'block';
-      document.getElementById('modal-count').textContent = data.count || '';
-    } else {
-      msgEl.className = 'modal-msg error';
-      msgEl.textContent = data.error || 'Registration failed. Please try again.';
-      msgEl.style.display = 'block';
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Register for This Event';
-    }
-  } catch {
-    msgEl.className = 'modal-msg error';
-    msgEl.textContent = 'Could not connect. Please try again.';
-    msgEl.style.display = 'block';
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Register for This Event';
-  }
-}
-
-/* Close modal on backdrop click */
 document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('reg-modal');
+  const modal = document.getElementById('event-modal');
   if (modal) {
-    modal.addEventListener('click', e => { if (e.target === modal) closeRegModal(); });
+    modal.addEventListener('click', e => { if (e.target === modal) closeEventModal(); });
   }
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRegModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEventModal(); });
 
 /* ── Contact form ── */
 (function initContactForm() {

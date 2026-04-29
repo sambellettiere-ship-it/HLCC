@@ -61,19 +61,11 @@
     .event-title { font-size: 0.9rem; color: var(--white); font-weight: 600; }
     .event-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
     .event-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-    .reg-panel { background: var(--bg-deep); border-top: 1px solid var(--border); padding: 14px 16px; display: none; }
-    .reg-panel.open { display: block; }
-    .reg-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
-    .reg-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.82rem; }
-    .reg-item-info { flex: 1; }
-    .reg-name { color: var(--white); font-weight: 600; }
-    .reg-email { color: var(--muted); font-size: 0.75rem; }
     .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-left: 8px; vertical-align: middle; }
     .pill-community { background: rgba(0,255,153,0.12); color: #00ff99; border: 1px solid rgba(0,255,153,0.3); }
     .pill-family    { background: rgba(191,0,255,0.12); color: #d966ff; border: 1px solid rgba(191,0,255,0.3); }
     .pill-private   { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
     .pill-special   { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
-    .count-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--cyan); font-weight: 700; }
     .empty { color: var(--muted); font-size: 0.86rem; text-align: center; padding: 24px 0; }
     .hint { font-size: 0.76rem; color: var(--faint); margin-top: 6px; }
     #login-section, #dashboard-section { display: none; }
@@ -104,7 +96,7 @@
     <div class="header">
       <div>
         <h1>Hidden Level Admin</h1>
-        <p class="subtitle">Manage calendar events &amp; registrations. <a href="/calendar.html" style="color:var(--cyan);">View calendar →</a></p>
+        <p class="subtitle">Manage calendar events. <a href="/calendar.html" style="color:var(--cyan);">View calendar →</a></p>
       </div>
       <button class="btn btn-logout" onclick="logout()">Sign Out</button>
     </div>
@@ -129,7 +121,7 @@
       </div>
       <label for="ev-title">Title</label>
       <input type="text" id="ev-title" placeholder="e.g. Tournament Night" maxlength="100" />
-      <div class="grid-3">
+      <div class="grid-2">
         <div>
           <label for="ev-start">Start Time (optional)</label>
           <input type="text" id="ev-start" placeholder="e.g. 6pm" maxlength="8" />
@@ -138,14 +130,9 @@
           <label for="ev-end">End Time (optional)</label>
           <input type="text" id="ev-end" placeholder="e.g. 9pm" maxlength="8" />
         </div>
-        <div>
-          <label for="ev-cap">Max Capacity (optional)</label>
-          <input type="number" id="ev-cap" placeholder="e.g. 20" min="1" max="999" />
-        </div>
       </div>
       <label for="ev-desc">Description (optional)</label>
       <textarea id="ev-desc" placeholder="Brief description..." maxlength="500"></textarea>
-      <p class="hint">Capacity limits registrations. Leave blank for unlimited.</p>
       <button class="btn btn-primary" onclick="submitEvent()">Add to Calendar</button>
       <div id="create-msg" class="msg" style="display:none;"></div>
     </div>
@@ -214,8 +201,6 @@ async function loadEvents() {
     countEl.textContent = `(${events.length})`;
     listEl.innerHTML = events.map(ev => {
       const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
-      const capStr = ev.maxCapacity ? ` · cap ${ev.maxCapacity}` : '';
-      const countStr = `${ev.registeredCount} registered${capStr}`;
       return `
         <div class="event-row" id="row-${esc(ev.id)}">
           <div class="event-row-main">
@@ -229,15 +214,8 @@ async function loadEvents() {
               ${ev.description ? `<div class="event-meta">${esc(ev.description)}</div>` : ''}
             </div>
             <div class="event-actions">
-              <button class="btn btn-sm btn-ghost" onclick="toggleRegs('${esc(ev.id)}')">
-                <span class="count-badge">👥 ${ev.registeredCount}</span>
-              </button>
               <button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(ev.id)}')">Delete</button>
             </div>
-          </div>
-          <div class="reg-panel" id="regs-${esc(ev.id)}">
-            <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">Registrations · <span class="count-badge">${countStr}</span></div>
-            <div class="reg-list" id="reg-list-${esc(ev.id)}">Loading…</div>
           </div>
         </div>`;
     }).join('');
@@ -246,52 +224,12 @@ async function loadEvents() {
   }
 }
 
-async function toggleRegs(id) {
-  const panel = document.getElementById('regs-' + id);
-  if (!panel) return;
-  const isOpen = panel.classList.contains('open');
-  panel.classList.toggle('open');
-  if (!isOpen) await loadRegs(id);
-}
-
-async function loadRegs(eventId) {
-  const listEl = document.getElementById('reg-list-' + eventId);
-  if (!listEl) return;
-  try {
-    const res = await fetch('/api/events/' + encodeURIComponent(eventId) + '/registrations', {
-      headers: { Authorization: authHeader() },
-    });
-    if (!res.ok) { listEl.innerHTML = '<div style="color:#ff6666;font-size:0.82rem;">Failed to load registrations.</div>'; return; }
-    const regs = await res.json();
-    if (!regs.length) { listEl.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">No registrations yet.</div>'; return; }
-    listEl.innerHTML = regs.map(r => `
-      <div class="reg-item">
-        <div class="reg-item-info">
-          <span class="reg-name">${esc(r.name)}</span>
-          <span class="reg-email"> — ${esc(r.email)}</span>
-        </div>
-        <button class="btn btn-sm btn-danger" onclick="removeReg('${esc(eventId)}','${esc(r.id)}')">Remove</button>
-      </div>`).join('');
-  } catch { listEl.innerHTML = '<div style="color:#ff6666;font-size:0.82rem;">Error loading registrations.</div>'; }
-}
-
-async function removeReg(eventId, regId) {
-  if (!confirm('Remove this registration?')) return;
-  try {
-    const res = await fetch(`/api/events/${encodeURIComponent(eventId)}/registrations/${encodeURIComponent(regId)}`, {
-      method: 'DELETE', headers: { Authorization: authHeader() },
-    });
-    if (res.ok) { await loadRegs(eventId); await loadEvents(); }
-  } catch { alert('Failed to remove registration.'); }
-}
-
 async function submitEvent() {
   const date = document.getElementById('ev-date').value;
   const title = document.getElementById('ev-title').value.trim();
   const type = document.getElementById('ev-type').value;
   const startTime = document.getElementById('ev-start').value.trim();
   const endTime = document.getElementById('ev-end').value.trim();
-  const maxCapacity = document.getElementById('ev-cap').value;
   const description = document.getElementById('ev-desc').value.trim();
   const msgEl = document.getElementById('create-msg');
   msgEl.style.display = 'none';
@@ -301,7 +239,7 @@ async function submitEvent() {
     const res = await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
-      body: JSON.stringify({ date, title, type, startTime, endTime, maxCapacity: maxCapacity || null, description }),
+      body: JSON.stringify({ date, title, type, startTime, endTime, description }),
     });
     if (res.status === 401) { showMsg(msgEl, 'error', 'Session expired — sign out and back in.'); return; }
     if (!res.ok) { const d = await res.json().catch(() => ({})); showMsg(msgEl, 'error', d.error || 'Failed to create event.'); return; }
@@ -310,7 +248,6 @@ async function submitEvent() {
     document.getElementById('ev-type').value = 'special';
     document.getElementById('ev-start').value = '';
     document.getElementById('ev-end').value = '';
-    document.getElementById('ev-cap').value = '';
     document.getElementById('ev-desc').value = '';
     showMsg(msgEl, 'success', 'Event added to calendar.');
     loadEvents();
@@ -318,7 +255,7 @@ async function submitEvent() {
 }
 
 async function deleteEvent(id) {
-  if (!confirm('Delete this event and all its registrations?')) return;
+  if (!confirm('Delete this event?')) return;
   try {
     const res = await fetch('/api/events/' + encodeURIComponent(id), { method: 'DELETE', headers: { Authorization: authHeader() } });
     if (res.status === 401) { alert('Session expired — sign out and back in.'); return; }

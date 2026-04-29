@@ -9,7 +9,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const EVENTS_FILE = path.join(DATA_DIR, 'events.json');
-const REGS_FILE = path.join(DATA_DIR, 'registrations.json');
 const OWNER_EMAIL = process.env.NOTIFY_EMAIL || 'hiddenlevelcu@gmail.com';
 
 app.use(express.json());
@@ -91,18 +90,12 @@ app.get('/api/admin/ping', (req, res) => {
 
 // ── Events ────────────────────────────────────────────────────
 app.get('/api/events', (req, res) => {
-  const events = readJSON(EVENTS_FILE, []);
-  const regs = readJSON(REGS_FILE, []);
-  const result = events.map(ev => ({
-    ...ev,
-    registeredCount: regs.filter(r => r.eventId === ev.id).length,
-  }));
-  res.json(result);
+  res.json(readJSON(EVENTS_FILE, []));
 });
 
 app.post('/api/events', (req, res) => {
   if (!checkAuth(req, res)) return;
-  const { date, title, description, type, startTime, endTime, maxCapacity } = req.body;
+  const { date, title, description, type, startTime, endTime } = req.body;
   if (!date || !title) return res.status(400).json({ error: 'date and title are required' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'date must be YYYY-MM-DD' });
   const validTypes = ['community', 'family', 'private', 'special'];
@@ -115,12 +108,11 @@ app.post('/api/events', (req, res) => {
     type: validTypes.includes(type) ? type : 'special',
     startTime: String(startTime || '').trim().slice(0, 8),
     endTime: String(endTime || '').trim().slice(0, 8),
-    maxCapacity: maxCapacity ? (parseInt(maxCapacity) || null) : null,
     createdAt: new Date().toISOString(),
   };
   events.push(ev);
   writeJSON(EVENTS_FILE, events);
-  res.status(201).json({ ...ev, registeredCount: 0 });
+  res.status(201).json(ev);
 });
 
 app.delete('/api/events/:id', (req, res) => {
@@ -130,81 +122,6 @@ app.delete('/api/events/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Event not found' });
   const [removed] = events.splice(idx, 1);
   writeJSON(EVENTS_FILE, events);
-  // Also remove all registrations for this event
-  const regs = readJSON(REGS_FILE, []).filter(r => r.eventId !== req.params.id);
-  writeJSON(REGS_FILE, regs);
-  res.json(removed);
-});
-
-// ── Registrations ─────────────────────────────────────────────
-app.post('/api/events/:id/register', async (req, res) => {
-  const events = readJSON(EVENTS_FILE, []);
-  const ev = events.find(e => e.id === req.params.id);
-  if (!ev) return res.status(404).json({ error: 'Event not found' });
-
-  const { name, email } = req.body;
-  if (!name || !email) return res.status(400).json({ error: 'name and email are required' });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email address' });
-
-  const regs = readJSON(REGS_FILE, []);
-  const evRegs = regs.filter(r => r.eventId === ev.id);
-
-  // Check capacity
-  if (ev.maxCapacity && evRegs.length >= ev.maxCapacity) {
-    return res.status(409).json({ error: 'This event is at capacity.' });
-  }
-
-  // Check duplicate
-  const already = evRegs.find(r => r.email.toLowerCase() === email.toLowerCase());
-  if (already) return res.status(409).json({ error: 'This email is already registered for this event.' });
-
-  const reg = {
-    id: Date.now().toString(),
-    eventId: ev.id,
-    name: String(name).trim().slice(0, 80),
-    email: email.trim().toLowerCase(),
-    registeredAt: new Date().toISOString(),
-  };
-  regs.push(reg);
-  writeJSON(REGS_FILE, regs);
-
-  const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
-  const eventDetails = `${ev.title}${timeStr ? ' · ' + timeStr : ''} on ${ev.date}`;
-
-  // Notify owner
-  await sendMail({
-    to: OWNER_EMAIL,
-    subject: `[Hidden Level] New registration: ${ev.title}`,
-    text: `${reg.name} (${reg.email}) registered for ${eventDetails}.\n\nTotal registered: ${evRegs.length + 1}${ev.maxCapacity ? ' / ' + ev.maxCapacity : ''}.`,
-    html: `<p><strong>${reg.name}</strong> (<a href="mailto:${reg.email}">${reg.email}</a>) registered for <strong>${eventDetails}</strong>.</p><p>Total registered: ${evRegs.length + 1}${ev.maxCapacity ? ' / ' + ev.maxCapacity : ''}.</p>`,
-  });
-
-  // Confirm to registrant
-  await sendMail({
-    to: reg.email,
-    subject: `You're registered — ${ev.title} | Hidden Level`,
-    text: `Hi ${reg.name},\n\nYou're registered for ${eventDetails}.\n\nSee you there!\n\nHidden Level Cyber Cafe\n110 E University Ave Suite I, Urbana IL\n217-418-7404`,
-    html: `<p>Hi ${reg.name},</p><p>You're registered for <strong>${eventDetails}</strong>.</p><p>See you there!</p><p>— Hidden Level Cyber Cafe<br>110 E University Ave Suite I, Urbana IL<br>217-418-7404</p>`,
-  });
-
-  res.status(201).json({ ok: true, count: evRegs.length + 1 });
-});
-
-// Admin: view registrations for an event
-app.get('/api/events/:id/registrations', (req, res) => {
-  if (!checkAuth(req, res)) return;
-  const regs = readJSON(REGS_FILE, []).filter(r => r.eventId === req.params.id);
-  res.json(regs);
-});
-
-// Admin: remove a registration
-app.delete('/api/events/:id/registrations/:regId', (req, res) => {
-  if (!checkAuth(req, res)) return;
-  const regs = readJSON(REGS_FILE, []);
-  const idx = regs.findIndex(r => r.eventId === req.params.id && r.id === req.params.regId);
-  if (idx === -1) return res.status(404).json({ error: 'Registration not found' });
-  const [removed] = regs.splice(idx, 1);
-  writeJSON(REGS_FILE, regs);
   res.json(removed);
 });
 
