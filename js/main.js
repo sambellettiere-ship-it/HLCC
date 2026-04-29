@@ -67,12 +67,6 @@
   const titleEl = document.getElementById('cal-title');
   if (!grid || !titleEl) return;
 
-  /* Recurring events: key = day-of-week (0=Sun…6=Sat) */
-  const weeklyEvents = {
-    5: [{ label: 'Better Together Night', type: 'community', time: '6–8pm' }],
-  };
-  const familyNightTime = '2–5pm';
-
   /* Fetch admin-created events */
   const customByDate = {};
   let customList = [];
@@ -136,14 +130,6 @@
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    let satCount = 0, secondSat = -1;
-    for (let d = 1; d <= daysInMonth; d++) {
-      if (new Date(year, month, d).getDay() === 6) {
-        satCount++;
-        if (satCount === 2) { secondSat = d; break; }
-      }
-    }
-
     const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
     let html = dows.map(d => `<div class="calendar-grid__dow">${d}</div>`).join('');
 
@@ -156,27 +142,6 @@
       let pills = '';
 
       const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-
-      if (weeklyEvents[dow]) {
-        weeklyEvents[dow].forEach(ev => {
-          const [s, e] = (ev.time || '').split('–');
-          pills += pill(ev.type, ev.label, ev.time || '', {
-            title: ev.label, type: ev.type, date: dateKey,
-            startTime: s || '', endTime: e || '',
-            description: 'Our flagship weekly community night — everyone welcome.',
-            _info: true,
-          });
-        });
-      }
-      if (d === secondSat) {
-        const [s, e] = familyNightTime.split('–');
-        pills += pill('family', 'Family Game Night', familyNightTime, {
-          title: 'Family Game Night', type: 'family', date: dateKey,
-          startTime: s || '', endTime: e || '',
-          description: 'Monthly family-friendly afternoon — kid-safe titles and team games.',
-          _info: true,
-        });
-      }
 
       if (customByDate[dateKey]) {
         customByDate[dateKey].forEach(ev => {
