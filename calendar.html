@@ -212,6 +212,47 @@
 
 </div><!-- /page-wrap -->
 
+<!-- ══ REGISTRATION MODAL ═══════════════════════════════════ -->
+<div id="reg-modal" class="modal-overlay" hidden aria-modal="true" role="dialog">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeRegModal()" aria-label="Close">×</button>
+
+    <!-- Event details view -->
+    <div id="modal-details">
+      <div id="modal-badge" class="modal-event-badge"></div>
+      <h2 id="modal-title"></h2>
+      <div class="modal-meta" id="modal-meta"></div>
+      <p class="modal-desc" id="modal-desc" style="display:none;"></p>
+
+      <div class="modal-reg-status">
+        <span>👥</span>
+        <span><span class="reg-count-num" id="modal-count">0</span> registered<span id="modal-cap-text"></span></span>
+        <span id="modal-full-label" style="display:none;color:#ff6060;font-weight:700;margin-left:auto;">FULL</span>
+      </div>
+
+      <hr class="modal-divider" />
+
+      <div id="modal-form-wrap">
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px;">Sign up to let us know you're coming — we'll send a confirmation to your email.</p>
+        <form id="reg-form" onsubmit="submitReg(event)">
+          <label class="modal-form-label" for="reg-name">Your Name</label>
+          <input class="modal-input" type="text" id="reg-name" required autocomplete="name" placeholder="First &amp; last name" />
+          <label class="modal-form-label" for="reg-email">Email</label>
+          <input class="modal-input" type="email" id="reg-email" required autocomplete="email" placeholder="you@email.com" />
+          <button class="modal-submit" type="submit" id="reg-submit">Register for This Event</button>
+        </form>
+        <div class="modal-msg" id="reg-msg" style="display:none;"></div>
+      </div>
+
+      <div id="modal-success-wrap" class="modal-full-msg" style="display:none;">
+        <span class="check-icon">✅</span>
+        <p style="color:var(--green);font-weight:700;font-size:1rem;margin-bottom:6px;">You're registered!</p>
+        <p style="color:var(--text-muted);font-size:0.86rem;">A confirmation has been sent to your email.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ FOOTER ═══════════════════════════════════════════════ -->
 <footer class="footer">
   <div class="container">

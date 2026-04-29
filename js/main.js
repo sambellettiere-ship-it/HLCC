@@ -67,12 +67,13 @@
   const titleEl = document.getElementById('cal-title');
   if (!grid || !titleEl) return;
 
-  /* Weekly recurring events: key = day-of-week (0=Sun … 6=Sat) */
+  /* Recurring events: key = day-of-week (0=Sun…6=Sat) */
   const weeklyEvents = {
-    5: [{ label: 'Better Together Night', type: 'community' }],
+    5: [{ label: 'Better Together Night', type: 'community', time: '6–8pm' }],
   };
+  const familyNightTime = '2–5pm';
 
-  /* Fetch admin-created custom events and index by date string YYYY-MM-DD */
+  /* Fetch admin-created events */
   const customByDate = {};
   try {
     const res = await fetch('/api/events');
@@ -83,12 +84,19 @@
         customByDate[ev.date].push(ev);
       });
     }
-  } catch {
-    /* non-fatal — calendar still shows recurring events */
-  }
+  } catch { /* non-fatal */ }
 
   let viewYear, viewMonth;
   const today = new Date();
+
+  function pill(type, label, time, clickData) {
+    const timeHtml = time ? `<span class="ev-time">${time}</span>` : '';
+    if (clickData) {
+      const dataAttr = `data-event='${JSON.stringify(clickData).replace(/'/g, '&#39;')}'`;
+      return `<span class="cal-event-pill ${type} clickable" ${dataAttr} tabindex="0" role="button">${label}${timeHtml}</span>`;
+    }
+    return `<span class="cal-event-pill ${type}">${label}${timeHtml}</span>`;
+  }
 
   function render(year, month) {
     viewYear = year;
@@ -98,12 +106,10 @@
                         'JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
     titleEl.textContent = `${monthNames[month]} ${year}`;
 
-    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    /* Find 2nd Saturday for Family Game Night */
-    let satCount = 0;
-    let secondSat = -1;
+    let satCount = 0, secondSat = -1;
     for (let d = 1; d <= daysInMonth; d++) {
       if (new Date(year, month, d).getDay() === 6) {
         satCount++;
@@ -114,32 +120,30 @@
     const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
     let html = dows.map(d => `<div class="calendar-grid__dow">${d}</div>`).join('');
 
-    for (let i = 0; i < firstDay; i++) {
-      html += `<div class="cal-day empty"></div>`;
-    }
+    for (let i = 0; i < firstDay; i++) html += `<div class="cal-day empty"></div>`;
 
     for (let d = 1; d <= daysInMonth; d++) {
       const dow = new Date(year, month, d).getDay();
-      const isToday = (year === today.getFullYear() && month === today.getMonth() && d === today.getDate());
-      let classes = 'cal-day';
-      if (isToday) classes += ' today';
-
+      const isToday = year === today.getFullYear() && month === today.getMonth() && d === today.getDate();
+      let classes = 'cal-day' + (isToday ? ' today' : '');
       let pills = '';
 
       if (weeklyEvents[dow]) {
         weeklyEvents[dow].forEach(ev => {
-          pills += `<span class="cal-event-pill ${ev.type}">${ev.label}</span>`;
+          pills += pill(ev.type, ev.label, ev.time || '', null);
         });
       }
       if (d === secondSat) {
-        pills += `<span class="cal-event-pill family">Family Night</span>`;
+        pills += pill('family', 'Family Game Night', familyNightTime, null);
       }
 
-      /* Custom admin-created events */
       const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       if (customByDate[dateKey]) {
         customByDate[dateKey].forEach(ev => {
-          pills += `<span class="cal-event-pill ${ev.type}">${ev.title}</span>`;
+          const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
+          const countSuffix = ev.registeredCount > 0 ? ` · ${ev.registeredCount}` : '';
+          const timeDisplay = timeStr ? `${timeStr}${countSuffix}` : (countSuffix ? countSuffix.slice(3) : '');
+          pills += pill(ev.type, ev.title, timeDisplay, ev);
         });
       }
 
@@ -147,14 +151,23 @@
     }
 
     const total = firstDay + daysInMonth;
-    const remainder = total % 7;
-    if (remainder !== 0) {
-      for (let i = 0; i < 7 - remainder; i++) {
-        html += `<div class="cal-day empty"></div>`;
-      }
-    }
+    const rem = total % 7;
+    if (rem !== 0) for (let i = 0; i < 7 - rem; i++) html += `<div class="cal-day empty"></div>`;
 
     grid.innerHTML = html;
+
+    /* Attach click handlers to custom event pills */
+    grid.querySelectorAll('.cal-event-pill.clickable').forEach(el => {
+      el.addEventListener('click', () => {
+        try { openRegModal(JSON.parse(el.dataset.event)); } catch {}
+      });
+      el.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          try { openRegModal(JSON.parse(el.dataset.event)); } catch {}
+        }
+      });
+    });
   }
 
   const initDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
@@ -172,19 +185,186 @@
   });
 })();
 
+/* ── Registration modal ── */
+let currentEventId = null;
+
+function openRegModal(ev) {
+  currentEventId = ev.id;
+
+  const modal = document.getElementById('reg-modal');
+  if (!modal) return;
+
+  /* Reset state */
+  document.getElementById('modal-success-wrap').style.display = 'none';
+  document.getElementById('modal-form-wrap').style.display = 'block';
+  document.getElementById('reg-form').reset();
+  const msgEl = document.getElementById('reg-msg');
+  if (msgEl) msgEl.style.display = 'none';
+  document.getElementById('reg-submit').disabled = false;
+
+  /* Populate */
+  const badge = document.getElementById('modal-badge');
+  badge.textContent = ev.type;
+  badge.className = 'modal-event-badge ' + ev.type;
+
+  document.getElementById('modal-title').textContent = ev.title;
+
+  const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
+  const dateParts = ev.date.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateFormatted = `${months[+dateParts[1] - 1]} ${+dateParts[2]}, ${dateParts[0]}`;
+  document.getElementById('modal-meta').textContent = dateFormatted + (timeStr ? ' · ' + timeStr : '');
+
+  const descEl = document.getElementById('modal-desc');
+  if (ev.description) {
+    descEl.textContent = ev.description;
+    descEl.style.display = 'block';
+  } else {
+    descEl.style.display = 'none';
+  }
+
+  const count = ev.registeredCount || 0;
+  document.getElementById('modal-count').textContent = count;
+  const capText = document.getElementById('modal-cap-text');
+  const fullLabel = document.getElementById('modal-full-label');
+  const submitBtn = document.getElementById('reg-submit');
+  if (ev.maxCapacity) {
+    capText.textContent = ` / ${ev.maxCapacity}`;
+    if (count >= ev.maxCapacity) {
+      fullLabel.style.display = 'inline';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Event Full';
+    } else {
+      fullLabel.style.display = 'none';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Register for This Event';
+    }
+  } else {
+    capText.textContent = '';
+    fullLabel.style.display = 'none';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Register for This Event';
+  }
+
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  document.getElementById('reg-name').focus();
+}
+
+function closeRegModal() {
+  const modal = document.getElementById('reg-modal');
+  if (modal) modal.hidden = true;
+  document.body.style.overflow = '';
+  currentEventId = null;
+}
+
+async function submitReg(e) {
+  e.preventDefault();
+  if (!currentEventId) return;
+
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const msgEl = document.getElementById('reg-msg');
+  const submitBtn = document.getElementById('reg-submit');
+
+  msgEl.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Registering…';
+
+  try {
+    const res = await fetch(`/api/events/${encodeURIComponent(currentEventId)}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok) {
+      document.getElementById('modal-form-wrap').style.display = 'none';
+      document.getElementById('modal-success-wrap').style.display = 'block';
+      document.getElementById('modal-count').textContent = data.count || '';
+    } else {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = data.error || 'Registration failed. Please try again.';
+      msgEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Register for This Event';
+    }
+  } catch {
+    msgEl.className = 'modal-msg error';
+    msgEl.textContent = 'Could not connect. Please try again.';
+    msgEl.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Register for This Event';
+  }
+}
+
+/* Close modal on backdrop click */
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('reg-modal');
+  if (modal) {
+    modal.addEventListener('click', e => { if (e.target === modal) closeRegModal(); });
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRegModal(); });
+
 /* ── Contact form ── */
 (function initContactForm() {
   const form = document.getElementById('contact-form');
   if (!form) return;
 
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
-    /* TODO: Replace with a real form endpoint (e.g. Formspree.io) by updating
-       form's action attribute and removing this preventDefault when ready. */
-    const success = document.getElementById('form-success');
-    if (success) {
-      form.style.display = 'none';
-      success.style.display = 'block';
+    const errEl = document.getElementById('form-error');
+    if (errEl) errEl.style.display = 'none';
+
+    const body = {
+      name: document.getElementById('f-name')?.value.trim() || '',
+      email: document.getElementById('f-email')?.value.trim() || '',
+      subject: document.getElementById('f-subject')?.value || '',
+      message: document.getElementById('f-msg')?.value.trim() || '',
+    };
+    if (document.getElementById('f-booking-date')) {
+      body.bookingDate = document.getElementById('f-booking-date').value;
+      body.bookingTime = document.getElementById('f-booking-time').value.trim();
+      body.bookingGuests = document.getElementById('f-booking-guests').value;
+      body.bookingType = document.getElementById('f-booking-type').value;
+    }
+
+    const submitBtn = form.querySelector('[type=submit]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
+
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        form.style.display = 'none';
+        const success = document.getElementById('form-success');
+        if (success) success.style.display = 'block';
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (errEl) {
+          errEl.textContent = data.error || 'Something went wrong. Please try again or call us directly.';
+          errEl.style.display = 'block';
+        }
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send Message'; }
+      }
+    } catch {
+      if (errEl) {
+        errEl.textContent = 'Could not connect. Please call us at 217-418-7404 or email Hiddenlevelcu@gmail.com.';
+        errEl.style.display = 'block';
+      }
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Send Message'; }
     }
   });
 })();
+
+/* ── Toggle booking fields on contact form ── */
+function toggleBookingFields() {
+  const subject = document.getElementById('f-subject')?.value;
+  const fields = document.getElementById('booking-fields');
+  if (fields) fields.style.display = subject === 'booking' ? 'block' : 'none';
+}

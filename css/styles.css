@@ -1143,6 +1143,119 @@ section {
   color: var(--cyan);
   border: 1px solid rgba(0,229,255,0.25);
 }
+.cal-event-pill.clickable {
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.cal-event-pill.clickable:hover {
+  filter: brightness(1.25);
+}
+.cal-event-pill .ev-time {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 0.48rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  opacity: 0.8;
+  margin-top: 1px;
+}
+
+/* ── Registration modal ────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.modal-overlay[hidden] { display: none; }
+.modal-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-cyan);
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-close {
+  position: absolute;
+  top: 16px; right: 20px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+.modal-close:hover { color: var(--white); }
+.modal-event-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-family: var(--font-head);
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.modal-event-badge.community { background: rgba(0,255,153,0.12); color: var(--green); border: 1px solid rgba(0,255,153,0.3); }
+.modal-event-badge.family    { background: rgba(191,0,255,0.12); color: #d966ff; border: 1px solid rgba(191,0,255,0.3); }
+.modal-event-badge.private   { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
+.modal-event-badge.special   { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+.modal-box h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 6px; }
+.modal-meta { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 8px; }
+.modal-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
+.modal-reg-status {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(0,229,255,0.05);
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+.modal-reg-status .reg-count-num { font-weight: 800; color: var(--cyan); font-family: var(--font-head); }
+.modal-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+.modal-form-label {
+  display: block; font-family: var(--font-head);
+  font-size: 0.6rem; letter-spacing: 0.12em;
+  color: var(--text-muted); text-transform: uppercase;
+  margin-bottom: 6px; margin-top: 14px;
+}
+.modal-form-label:first-of-type { margin-top: 0; }
+.modal-input {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--white); font-size: 0.9rem;
+  padding: 10px 14px; outline: none;
+  transition: border-color 0.2s; font-family: var(--font-body);
+}
+.modal-input:focus { border-color: rgba(0,229,255,0.45); }
+.modal-submit {
+  width: 100%; margin-top: 16px;
+  background: linear-gradient(135deg, var(--purple), var(--cyan));
+  color: #000; border: none; border-radius: 8px;
+  padding: 12px; font-size: 0.88rem; font-weight: 800;
+  font-family: var(--font-head); letter-spacing: 0.05em;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.modal-submit:hover { opacity: 0.9; }
+.modal-submit:disabled { opacity: 0.5; cursor: default; }
+.modal-msg { font-size: 0.84rem; margin-top: 10px; text-align: center; }
+.modal-msg.success { color: var(--green); }
+.modal-msg.error   { color: #ff6060; }
+.modal-full-msg { text-align: center; padding: 10px 0; }
+.modal-full-msg .check-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
 
 /* Event list items */
 .event-item {
