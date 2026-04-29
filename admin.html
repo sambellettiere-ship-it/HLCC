@@ -307,6 +307,7 @@ async function createEvent() {
     if (!res.ok) { const d = await res.json().catch(() => ({})); showMsg(msgEl, 'error', d.error || 'Failed to create event.'); return; }
     document.getElementById('ev-date').value = '';
     document.getElementById('ev-title').value = '';
+    document.getElementById('ev-type').value = 'special';
     document.getElementById('ev-start').value = '';
     document.getElementById('ev-end').value = '';
     document.getElementById('ev-cap').value = '';
