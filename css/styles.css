@@ -1074,7 +1074,7 @@ section {
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 .calendar-grid__dow {
   padding: 12px 0;
@@ -1088,6 +1088,7 @@ section {
 }
 .cal-day {
   min-height: 80px;
+  min-width: 0;
   padding: 10px 8px;
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -1447,6 +1448,8 @@ section {
   .event-modal__body { padding: 18px; gap: 14px; }
   .event-modal__title { font-size: 1.2rem; }
   .event-modal__stats { grid-template-columns: 1fr; }
+  .event-modal__cta { flex-direction: column; }
+  .event-modal__cta .btn { min-width: unset; flex: unset; width: 100%; }
 }
 
 @keyframes modalFade {
