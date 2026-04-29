@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Hidden Level</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --bg-card: #12121a; --bg-deep: #0d0d14;
+      --border: rgba(255,255,255,0.08);
+      --cyan: #00e5ff; --green: #00ff99; --purple: #bf00ff; --yellow: #ffd600;
+      --white: #f0f0ff; --muted: #8888aa; --faint: #44445a;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--white); min-height: 100vh; padding: 40px 16px; }
+    .container { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: 0.04em; color: var(--cyan); margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 0.88rem; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+    h2 { font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 18px; }
+    label { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 14px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.08em; }
+    label:first-of-type { margin-top: 0; }
+    input, select, textarea {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--white); font-size: 0.9rem;
+      padding: 10px 14px; outline: none; transition: border-color 0.2s; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { border-color: rgba(0,229,255,0.45); }
+    textarea { resize: vertical; min-height: 72px; }
+    select option { background: #1a1a2e; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 8px; font-size: 0.85rem;
+      font-weight: 700; cursor: pointer; border: none; font-family: inherit; transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary { background: linear-gradient(135deg, var(--purple), var(--cyan)); color: #000; margin-top: 18px; }
+    .btn-sm { padding: 5px 11px; font-size: 0.7rem; margin-top: 0; border-radius: 6px; }
+    .btn-danger { background: rgba(255,60,60,0.12); color: #ff6666; border: 1px solid rgba(255,60,60,0.25); }
+    .btn-danger:hover { background: rgba(255,60,60,0.22); }
+    .btn-ghost { background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.09); color: var(--white); }
+    .btn-logout { background: none; border: 1px solid var(--border); color: var(--muted); padding: 8px 16px; font-size: 0.78rem; border-radius: 7px; margin-top: 0; }
+    .btn-logout:hover { border-color: var(--muted); color: var(--white); }
+    .msg { font-size: 0.84rem; margin-top: 10px; }
+    .msg.success { color: var(--green); }
+    .msg.error { color: #ff6666; }
+    .event-list { display: flex; flex-direction: column; gap: 10px; }
+    .event-row {
+      border: 1px solid var(--border); border-radius: 9px; overflow: hidden;
+    }
+    .event-row-main {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+      padding: 14px 16px; background: rgba(255,255,255,0.025);
+    }
+    .event-info { flex: 1; min-width: 0; }
+    .event-date { font-size: 0.72rem; color: var(--cyan); font-weight: 700; margin-bottom: 3px; }
+    .event-title { font-size: 0.9rem; color: var(--white); font-weight: 600; }
+    .event-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .event-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+    .reg-panel { background: var(--bg-deep); border-top: 1px solid var(--border); padding: 14px 16px; display: none; }
+    .reg-panel.open { display: block; }
+    .reg-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .reg-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 0.82rem; }
+    .reg-item-info { flex: 1; }
+    .reg-name { color: var(--white); font-weight: 600; }
+    .reg-email { color: var(--muted); font-size: 0.75rem; }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-left: 8px; vertical-align: middle; }
+    .pill-community { background: rgba(0,255,153,0.12); color: #00ff99; border: 1px solid rgba(0,255,153,0.3); }
+    .pill-family    { background: rgba(191,0,255,0.12); color: #d966ff; border: 1px solid rgba(191,0,255,0.3); }
+    .pill-private   { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
+    .pill-special   { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+    .count-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--cyan); font-weight: 700; }
+    .empty { color: var(--muted); font-size: 0.86rem; text-align: center; padding: 24px 0; }
+    .hint { font-size: 0.76rem; color: var(--faint); margin-top: 6px; }
+    #login-section, #dashboard-section { display: none; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- LOGIN -->
+  <div id="login-section">
+    <div class="header">
+      <div><h1>Hidden Level Admin</h1><p class="subtitle">Sign in to manage calendar events.</p></div>
+    </div>
+    <div class="card" style="max-width:400px;">
+      <h2>Sign In</h2>
+      <label for="login-user">Username</label>
+      <input type="text" id="login-user" autocomplete="username" />
+      <label for="login-pass">Password</label>
+      <input type="password" id="login-pass" autocomplete="current-password" />
+      <button class="btn btn-primary" onclick="login()">Sign In</button>
+      <div id="login-msg" class="msg" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard-section">
+    <div class="header">
+      <div>
+        <h1>Hidden Level Admin</h1>
+        <p class="subtitle">Manage calendar events &amp; registrations. <a href="/calendar.html" style="color:var(--cyan);">View calendar →</a></p>
+      </div>
+      <button class="btn btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+
+    <!-- Add Event -->
+    <div class="card">
+      <h2>Add Event</h2>
+      <div class="grid-2">
+        <div>
+          <label for="ev-date">Date</label>
+          <input type="date" id="ev-date" />
+        </div>
+        <div>
+          <label for="ev-type">Type</label>
+          <select id="ev-type">
+            <option value="special">Special Event</option>
+            <option value="community">Community</option>
+            <option value="family">Family</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+      </div>
+      <label for="ev-title">Title</label>
+      <input type="text" id="ev-title" placeholder="e.g. Tournament Night" maxlength="100" />
+      <div class="grid-3">
+        <div>
+          <label for="ev-start">Start Time (optional)</label>
+          <input type="text" id="ev-start" placeholder="e.g. 6pm" maxlength="8" />
+        </div>
+        <div>
+          <label for="ev-end">End Time (optional)</label>
+          <input type="text" id="ev-end" placeholder="e.g. 9pm" maxlength="8" />
+        </div>
+        <div>
+          <label for="ev-cap">Max Capacity (optional)</label>
+          <input type="number" id="ev-cap" placeholder="e.g. 20" min="1" max="999" />
+        </div>
+      </div>
+      <label for="ev-desc">Description (optional)</label>
+      <textarea id="ev-desc" placeholder="Brief description..." maxlength="500"></textarea>
+      <p class="hint">Capacity limits registrations. Leave blank for unlimited.</p>
+      <button class="btn btn-primary" onclick="createEvent()">Add to Calendar</button>
+      <div id="create-msg" class="msg" style="display:none;"></div>
+    </div>
+
+    <!-- Event List -->
+    <div class="card">
+      <h2>Events <span id="event-count" style="font-weight:400;color:var(--faint);"></span></h2>
+      <div id="event-list" class="event-list">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+'use strict';
+let creds = null;
+
+function authHeader() { return 'Basic ' + btoa(creds.u + ':' + creds.p); }
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+async function login() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const msgEl = document.getElementById('login-msg');
+  msgEl.style.display = 'none';
+  if (!u || !p) { showMsg(msgEl, 'error', 'Enter username and password.'); return; }
+  try {
+    const res = await fetch('/api/admin/ping', { headers: { Authorization: 'Basic ' + btoa(u + ':' + p) } });
+    if (res.status === 401) { showMsg(msgEl, 'error', 'Incorrect username or password.'); return; }
+    if (!res.ok) { showMsg(msgEl, 'error', 'Server error. Check ADMIN_USERNAME and ADMIN_PASSWORD are set.'); return; }
+    creds = { u, p };
+    sessionStorage.setItem('hl_admin', btoa(u + ':' + p));
+    showDashboard();
+  } catch { showMsg(msgEl, 'error', 'Could not reach the server.'); }
+}
+
+function logout() {
+  creds = null;
+  sessionStorage.removeItem('hl_admin');
+  document.getElementById('dashboard-section').style.display = 'none';
+  document.getElementById('login-section').style.display = 'block';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+function showDashboard() {
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('dashboard-section').style.display = 'block';
+  loadEvents();
+}
+
+async function loadEvents() {
+  const listEl = document.getElementById('event-list');
+  const countEl = document.getElementById('event-count');
+  try {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+    if (!Array.isArray(events) || !events.length) {
+      listEl.innerHTML = '<div class="empty">No custom events yet. Add one above.</div>';
+      countEl.textContent = '';
+      return;
+    }
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    countEl.textContent = `(${events.length})`;
+    listEl.innerHTML = events.map(ev => {
+      const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
+      const capStr = ev.maxCapacity ? ` · cap ${ev.maxCapacity}` : '';
+      const countStr = `${ev.registeredCount} registered${capStr}`;
+      return `
+        <div class="event-row" id="row-${esc(ev.id)}">
+          <div class="event-row-main">
+            <div class="event-info">
+              <div class="event-date">
+                ${formatDate(ev.date)}
+                ${timeStr ? `<span style="color:var(--muted);font-weight:400;"> · ${esc(timeStr)}</span>` : ''}
+                <span class="pill pill-${esc(ev.type)}">${esc(ev.type)}</span>
+              </div>
+              <div class="event-title">${esc(ev.title)}</div>
+              ${ev.description ? `<div class="event-meta">${esc(ev.description)}</div>` : ''}
+            </div>
+            <div class="event-actions">
+              <button class="btn btn-sm btn-ghost" onclick="toggleRegs('${esc(ev.id)}')">
+                <span class="count-badge">👥 ${ev.registeredCount}</span>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteEvent('${esc(ev.id)}')">Delete</button>
+            </div>
+          </div>
+          <div class="reg-panel" id="regs-${esc(ev.id)}">
+            <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">Registrations · <span class="count-badge">${countStr}</span></div>
+            <div class="reg-list" id="reg-list-${esc(ev.id)}">Loading…</div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch {
+    listEl.innerHTML = '<div class="empty" style="color:#ff6666;">Failed to load events.</div>';
+  }
+}
+
+async function toggleRegs(id) {
+  const panel = document.getElementById('regs-' + id);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (!isOpen) await loadRegs(id);
+}
+
+async function loadRegs(eventId) {
+  const listEl = document.getElementById('reg-list-' + eventId);
+  if (!listEl) return;
+  try {
+    const res = await fetch('/api/events/' + encodeURIComponent(eventId) + '/registrations', {
+      headers: { Authorization: authHeader() },
+    });
+    if (!res.ok) { listEl.innerHTML = '<div style="color:#ff6666;font-size:0.82rem;">Failed to load registrations.</div>'; return; }
+    const regs = await res.json();
+    if (!regs.length) { listEl.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">No registrations yet.</div>'; return; }
+    listEl.innerHTML = regs.map(r => `
+      <div class="reg-item">
+        <div class="reg-item-info">
+          <span class="reg-name">${esc(r.name)}</span>
+          <span class="reg-email"> — ${esc(r.email)}</span>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="removeReg('${esc(eventId)}','${esc(r.id)}')">Remove</button>
+      </div>`).join('');
+  } catch { listEl.innerHTML = '<div style="color:#ff6666;font-size:0.82rem;">Error loading registrations.</div>'; }
+}
+
+async function removeReg(eventId, regId) {
+  if (!confirm('Remove this registration?')) return;
+  try {
+    const res = await fetch(`/api/events/${encodeURIComponent(eventId)}/registrations/${encodeURIComponent(regId)}`, {
+      method: 'DELETE', headers: { Authorization: authHeader() },
+    });
+    if (res.ok) { await loadRegs(eventId); await loadEvents(); }
+  } catch { alert('Failed to remove registration.'); }
+}
+
+async function createEvent() {
+  const date = document.getElementById('ev-date').value;
+  const title = document.getElementById('ev-title').value.trim();
+  const type = document.getElementById('ev-type').value;
+  const startTime = document.getElementById('ev-start').value.trim();
+  const endTime = document.getElementById('ev-end').value.trim();
+  const maxCapacity = document.getElementById('ev-cap').value;
+  const description = document.getElementById('ev-desc').value.trim();
+  const msgEl = document.getElementById('create-msg');
+  msgEl.style.display = 'none';
+
+  if (!date || !title) { showMsg(msgEl, 'error', 'Date and title are required.'); return; }
+  try {
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify({ date, title, type, startTime, endTime, maxCapacity: maxCapacity || null, description }),
+    });
+    if (res.status === 401) { showMsg(msgEl, 'error', 'Session expired — sign out and back in.'); return; }
+    if (!res.ok) { const d = await res.json().catch(() => ({})); showMsg(msgEl, 'error', d.error || 'Failed to create event.'); return; }
+    document.getElementById('ev-date').value = '';
+    document.getElementById('ev-title').value = '';
+    document.getElementById('ev-start').value = '';
+    document.getElementById('ev-end').value = '';
+    document.getElementById('ev-cap').value = '';
+    document.getElementById('ev-desc').value = '';
+    showMsg(msgEl, 'success', 'Event added to calendar.');
+    loadEvents();
+  } catch { showMsg(msgEl, 'error', 'Failed to create event.'); }
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event and all its registrations?')) return;
+  try {
+    const res = await fetch('/api/events/' + encodeURIComponent(id), { method: 'DELETE', headers: { Authorization: authHeader() } });
+    if (res.status === 401) { alert('Session expired — sign out and back in.'); return; }
+    if (res.ok) loadEvents();
+  } catch { alert('Failed to delete event.'); }
+}
+
+function showMsg(el, type, text) {
+  el.className = 'msg ' + type; el.textContent = text; el.style.display = 'block';
+  if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+function formatDate(iso) {
+  const [y, m, d] = iso.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m - 1] + ` ${+d}, ${y}`;
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+(function init() {
+  const saved = sessionStorage.getItem('hl_admin');
+  if (saved) {
+    try {
+      const decoded = atob(saved);
+      const sep = decoded.indexOf(':');
+      if (sep > 0) { creds = { u: decoded.slice(0, sep), p: decoded.slice(sep + 1) }; showDashboard(); return; }
+    } catch {}
+  }
+  document.getElementById('login-section').style.display = 'block';
+})();
+</script>
+</body>
+</html>

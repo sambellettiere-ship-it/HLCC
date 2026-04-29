@@ -134,7 +134,7 @@
 
               <div class="form-group">
                 <label for="f-subject">What's this about?</label>
-                <select id="f-subject" name="subject">
+                <select id="f-subject" name="subject" onchange="toggleBookingFields()">
                   <option value="">Select a topic…</option>
                   <option value="general">General Question</option>
                   <option value="booking">Private Booking</option>
@@ -144,17 +144,51 @@
                 </select>
               </div>
 
+              <!-- Extra fields for private bookings -->
+              <div id="booking-fields" style="display:none;">
+                <div class="grid-2" style="gap:16px;">
+                  <div class="form-group">
+                    <label for="f-booking-date">Preferred Date</label>
+                    <input type="date" id="f-booking-date" name="bookingDate" />
+                  </div>
+                  <div class="form-group">
+                    <label for="f-booking-time">Preferred Time</label>
+                    <input type="text" id="f-booking-time" name="bookingTime" placeholder="e.g. 6pm–9pm" />
+                  </div>
+                </div>
+                <div class="grid-2" style="gap:16px;">
+                  <div class="form-group">
+                    <label for="f-booking-guests">Expected Guests</label>
+                    <input type="number" id="f-booking-guests" name="bookingGuests" placeholder="Up to 20" min="1" max="20" />
+                  </div>
+                  <div class="form-group">
+                    <label for="f-booking-type">Occasion</label>
+                    <select id="f-booking-type" name="bookingType">
+                      <option value="">Select…</option>
+                      <option value="Birthday Party">Birthday Party</option>
+                      <option value="Team Outing">Team Outing</option>
+                      <option value="Graduation Party">Graduation Party</option>
+                      <option value="Private Tournament">Private Tournament</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-faint);margin-bottom:8px;">Private bookings are $150/hr for up to 20 guests. We'll confirm availability and follow up with you directly.</p>
+              </div>
+
               <div class="form-group">
                 <label for="f-msg">Message</label>
                 <textarea id="f-msg" name="message" placeholder="Tell us what's on your mind…" required></textarea>
               </div>
+
+              <div id="form-error" style="display:none;color:#ff6060;font-size:0.84rem;margin-top:8px;"></div>
 
               <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
                 Send Message
               </button>
             </form>
 
-            <div id="form-success" class="form-success" role="alert">
+            <div id="form-success" class="form-success" role="alert" style="display:none;">
               ✓ &nbsp; Message received! We'll get back to you soon.
               <br /><br />
               <span style="font-size:0.85rem;text-transform:none;letter-spacing:0;font-family:var(--font-body);color:var(--text-muted);">
