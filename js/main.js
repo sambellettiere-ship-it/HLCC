@@ -269,18 +269,29 @@ function openEventModal(ev) {
 
   document.getElementById('modal-title').textContent = ev.title;
 
-  const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
   const dateParts = ev.date.split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dateFormatted = `${months[+dateParts[1] - 1]} ${+dateParts[2]}, ${dateParts[0]}`;
-  document.getElementById('modal-meta').textContent = dateFormatted + (timeStr ? ' · ' + timeStr : '');
+  const dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dateObj = new Date(+dateParts[0], +dateParts[1] - 1, +dateParts[2]);
+  const dateFormatted = `${dows[dateObj.getDay()]}, ${months[+dateParts[1] - 1]} ${+dateParts[2]}`;
+  document.getElementById('modal-date').textContent = dateFormatted;
 
+  const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
+  const timeStat = document.getElementById('modal-time-stat');
+  if (timeStr) {
+    document.getElementById('modal-time').textContent = timeStr;
+    timeStat.hidden = false;
+  } else {
+    timeStat.hidden = true;
+  }
+
+  const descWrap = document.getElementById('modal-desc-wrap');
   const descEl = document.getElementById('modal-desc');
   if (ev.description) {
     descEl.textContent = ev.description;
-    descEl.hidden = false;
+    descWrap.hidden = false;
   } else {
-    descEl.hidden = true;
+    descWrap.hidden = true;
   }
 
   modal.hidden = false;

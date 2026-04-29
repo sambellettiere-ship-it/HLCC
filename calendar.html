@@ -227,28 +227,40 @@
 <!-- ══ EVENT DETAIL MODAL ═══════════════════════════════════ -->
 <div id="event-modal" class="event-modal" hidden aria-modal="true" role="dialog" aria-labelledby="modal-title">
   <div class="event-modal__box" role="document">
-    <span class="event-modal__corner event-modal__corner--tl"></span>
-    <span class="event-modal__corner event-modal__corner--tr"></span>
-    <span class="event-modal__corner event-modal__corner--bl"></span>
-    <span class="event-modal__corner event-modal__corner--br"></span>
+    <div class="event-modal__header">
+      <div class="event-modal__header-text">
+        <h2 id="modal-title" class="event-modal__title"></h2>
+        <div id="modal-badge" class="event-modal__badge"></div>
+      </div>
+      <button class="event-modal__close" onclick="closeEventModal()" aria-label="Close">&times;</button>
+    </div>
 
-    <button class="event-modal__close" onclick="closeEventModal()" aria-label="Close">×</button>
+    <div class="event-modal__body">
+      <div class="event-modal__stats">
+        <div class="event-stat">
+          <div class="event-stat__label">Date</div>
+          <div class="event-stat__value" id="modal-date">--</div>
+        </div>
+        <div class="event-stat" id="modal-time-stat">
+          <div class="event-stat__label">Time</div>
+          <div class="event-stat__value" id="modal-time">--</div>
+        </div>
+      </div>
 
-    <div id="modal-badge" class="event-modal__badge"></div>
-    <h2 id="modal-title" class="event-modal__title"></h2>
+      <div class="event-modal__desc-card" id="modal-desc-wrap" hidden>
+        <div class="event-modal__desc-label">About this event</div>
+        <p class="event-modal__desc" id="modal-desc"></p>
+      </div>
 
-    <div class="event-modal__meta" id="modal-meta"></div>
-
-    <p class="event-modal__desc" id="modal-desc" hidden></p>
-
-    <div class="event-modal__cta">
-      <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer"
-         class="btn btn-discord" style="font-size:0.65rem;padding:10px 20px;">
-        Join Discord for Details
-      </a>
-      <a href="contact.html" class="btn btn-outline" style="font-size:0.65rem;padding:10px 20px;">
-        Contact Us
-      </a>
+      <div class="event-modal__cta">
+        <a href="https://discord.gg/w6xh7fzxr3" target="_blank" rel="noopener noreferrer"
+           class="btn btn-discord">
+          Join Discord for Details
+        </a>
+        <a href="contact.html" class="btn btn-outline">
+          Contact Us
+        </a>
+      </div>
     </div>
   </div>
 </div>
