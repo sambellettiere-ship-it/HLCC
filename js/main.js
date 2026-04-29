@@ -170,8 +170,7 @@
     });
   }
 
-  const initDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-  render(initDate.getFullYear(), initDate.getMonth());
+  render(today.getFullYear(), today.getMonth());
 
   document.getElementById('cal-prev')?.addEventListener('click', () => {
     let m = viewMonth - 1, y = viewYear;
