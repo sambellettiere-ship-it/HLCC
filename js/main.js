@@ -75,27 +75,31 @@
 
   /* Fetch admin-created events */
   const customByDate = {};
+  let customList = [];
   try {
-    const res = await fetch('/api/events');
+    const res = await fetch('/api/events', { cache: 'no-store' });
     if (res.ok) {
-      const list = await res.json();
-      list.forEach(ev => {
+      customList = await res.json();
+      customList.forEach(ev => {
         if (!customByDate[ev.date]) customByDate[ev.date] = [];
         customByDate[ev.date].push(ev);
       });
     }
   } catch { /* non-fatal */ }
 
+  renderUpcoming(customList);
+
   let viewYear, viewMonth;
   const today = new Date();
 
   function pill(type, label, time, clickData) {
-    const timeHtml = time ? `<span class="ev-time">${time}</span>` : '';
+    const safeLabel = escapeHtml(label);
+    const timeHtml = time ? `<span class="ev-time">${escapeHtml(time)}</span>` : '';
     if (clickData) {
-      const dataAttr = `data-event='${JSON.stringify(clickData).replace(/'/g, '&#39;')}'`;
-      return `<span class="cal-event-pill ${type} clickable" ${dataAttr} tabindex="0" role="button">${label}${timeHtml}</span>`;
+      const json = JSON.stringify(clickData).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/'/g, '&#39;');
+      return `<span class="cal-event-pill ${escapeHtml(type)} clickable" data-event='${json}' tabindex="0" role="button">${safeLabel}${timeHtml}</span>`;
     }
-    return `<span class="cal-event-pill ${type}">${label}${timeHtml}</span>`;
+    return `<span class="cal-event-pill ${escapeHtml(type)}">${safeLabel}${timeHtml}</span>`;
   }
 
   function render(year, month) {
@@ -128,16 +132,29 @@
       let classes = 'cal-day' + (isToday ? ' today' : '');
       let pills = '';
 
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
       if (weeklyEvents[dow]) {
         weeklyEvents[dow].forEach(ev => {
-          pills += pill(ev.type, ev.label, ev.time || '', null);
+          const [s, e] = (ev.time || '').split('–');
+          pills += pill(ev.type, ev.label, ev.time || '', {
+            title: ev.label, type: ev.type, date: dateKey,
+            startTime: s || '', endTime: e || '',
+            description: 'Our flagship weekly community night — everyone welcome.',
+            _info: true,
+          });
         });
       }
       if (d === secondSat) {
-        pills += pill('family', 'Family Game Night', familyNightTime, null);
+        const [s, e] = familyNightTime.split('–');
+        pills += pill('family', 'Family Game Night', familyNightTime, {
+          title: 'Family Game Night', type: 'family', date: dateKey,
+          startTime: s || '', endTime: e || '',
+          description: 'Monthly family-friendly afternoon — kid-safe titles and team games.',
+          _info: true,
+        });
       }
 
-      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       if (customByDate[dateKey]) {
         customByDate[dateKey].forEach(ev => {
           const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
@@ -184,18 +201,84 @@
   });
 })();
 
+/* ── Upcoming events list (admin-created) ── */
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatUpcomingDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return { dow: dows[date.getDay()], month: months[m - 1], day: d, year: y };
+}
+
+function renderUpcoming(list) {
+  const section = document.getElementById('upcoming-section');
+  const container = document.getElementById('upcoming-list');
+  if (!section || !container) return;
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  const upcoming = list
+    .filter(ev => ev.date >= todayKey)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 12);
+
+  if (!upcoming.length) { section.hidden = true; return; }
+  section.hidden = false;
+
+  container.innerHTML = upcoming.map(ev => {
+    const fd = formatUpcomingDate(ev.date);
+    const timeStr = ev.startTime ? (ev.endTime ? `${ev.startTime}–${ev.endTime}` : ev.startTime) : '';
+    const capStr = ev.maxCapacity ? `${ev.registeredCount}/${ev.maxCapacity} registered` : `${ev.registeredCount} registered`;
+    const isFull = ev.maxCapacity && ev.registeredCount >= ev.maxCapacity;
+    const dataAttr = `data-event='${JSON.stringify(ev).replace(/'/g, '&#39;')}'`;
+    return `
+      <button class="upcoming-card" type="button" ${dataAttr}>
+        <div class="upcoming-card__date">
+          <span class="day">${fd.day}</span>
+          <span class="month">${fd.month}</span>
+          <span class="dow">${fd.dow}</span>
+        </div>
+        <div class="upcoming-card__info">
+          <div class="upcoming-card__head">
+            <h3>${escapeHtml(ev.title)}</h3>
+            <span class="badge ${escapeHtml(ev.type)}">${escapeHtml(ev.type)}</span>
+            ${isFull ? '<span class="badge full">Full</span>' : ''}
+          </div>
+          ${ev.description ? `<p class="upcoming-card__desc">${escapeHtml(ev.description)}</p>` : ''}
+          <div class="upcoming-card__meta">
+            ${timeStr ? `<span>🕒 ${escapeHtml(timeStr)}</span>` : ''}
+            <span>👥 ${escapeHtml(capStr)}</span>
+          </div>
+        </div>
+        <span class="upcoming-card__cta">${isFull ? 'View' : 'Register →'}</span>
+      </button>`;
+  }).join('');
+
+  container.querySelectorAll('.upcoming-card').forEach(el => {
+    el.addEventListener('click', () => {
+      try { openRegModal(JSON.parse(el.dataset.event)); } catch {}
+    });
+  });
+}
+
 /* ── Registration modal ── */
 let currentEventId = null;
 
 function openRegModal(ev) {
-  currentEventId = ev.id;
+  currentEventId = ev.id || null;
+  const isRegisterable = !!ev.id;
 
   const modal = document.getElementById('reg-modal');
   if (!modal) return;
 
   /* Reset state */
   document.getElementById('modal-success-wrap').style.display = 'none';
-  document.getElementById('modal-form-wrap').style.display = 'block';
+  const formWrap = document.getElementById('modal-form-wrap');
   document.getElementById('reg-form').reset();
   const msgEl = document.getElementById('reg-msg');
   if (msgEl) msgEl.style.display = 'none';
@@ -222,32 +305,46 @@ function openRegModal(ev) {
     descEl.style.display = 'none';
   }
 
-  const count = ev.registeredCount || 0;
-  document.getElementById('modal-count').textContent = count;
-  const capText = document.getElementById('modal-cap-text');
-  const fullLabel = document.getElementById('modal-full-label');
-  const submitBtn = document.getElementById('reg-submit');
-  if (ev.maxCapacity) {
-    capText.textContent = ` / ${ev.maxCapacity}`;
-    if (count >= ev.maxCapacity) {
-      fullLabel.style.display = 'inline';
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Event Full';
+  const regStatus = document.querySelector('.modal-reg-status');
+  const divider = document.querySelector('.modal-divider');
+
+  if (!isRegisterable) {
+    /* Info-only dialog for recurring events */
+    if (regStatus) regStatus.style.display = 'none';
+    if (divider) divider.style.display = 'none';
+    formWrap.style.display = 'none';
+  } else {
+    if (regStatus) regStatus.style.display = '';
+    if (divider) divider.style.display = '';
+    formWrap.style.display = 'block';
+
+    const count = ev.registeredCount || 0;
+    document.getElementById('modal-count').textContent = count;
+    const capText = document.getElementById('modal-cap-text');
+    const fullLabel = document.getElementById('modal-full-label');
+    const submitBtn = document.getElementById('reg-submit');
+    if (ev.maxCapacity) {
+      capText.textContent = ` / ${ev.maxCapacity}`;
+      if (count >= ev.maxCapacity) {
+        fullLabel.style.display = 'inline';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Event Full';
+      } else {
+        fullLabel.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register for This Event';
+      }
     } else {
+      capText.textContent = '';
       fullLabel.style.display = 'none';
       submitBtn.disabled = false;
       submitBtn.textContent = 'Register for This Event';
     }
-  } else {
-    capText.textContent = '';
-    fullLabel.style.display = 'none';
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Register for This Event';
   }
 
   modal.hidden = false;
   document.body.style.overflow = 'hidden';
-  document.getElementById('reg-name').focus();
+  if (isRegisterable) document.getElementById('reg-name').focus();
 }
 
 function closeRegModal() {
