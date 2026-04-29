@@ -1257,11 +1257,6 @@ section {
   text-transform: uppercase;
   color: var(--cyan, #00e5ff);
 }
-.badge.full {
-  background: rgba(255,80,80,0.12);
-  color: #ff6060;
-  border: 1px solid rgba(255,80,80,0.3);
-}
 @media (max-width: 600px) {
   .upcoming-card { flex-direction: row; gap: 12px; padding: 14px; }
   .upcoming-card__date { width: 54px; }
@@ -1269,101 +1264,133 @@ section {
   .upcoming-card__cta { display: none; }
 }
 
-/* ── Registration modal ────────────────────────────────────── */
-.modal-overlay {
+/* ── Event detail modal ────────────────────────────────────── */
+.event-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(3, 0, 8, 0.78);
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: modalFade 180ms var(--ease);
 }
-.modal-overlay[hidden] { display: none; }
-.modal-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border-cyan);
-  border-radius: 16px;
-  padding: 32px;
-  max-width: 480px;
-  width: 100%;
+.event-modal[hidden] { display: none; }
+
+.event-modal__box {
   position: relative;
+  background:
+    radial-gradient(ellipse at top left, rgba(191,0,255,0.14), transparent 55%),
+    radial-gradient(ellipse at bottom right, rgba(0,229,255,0.10), transparent 55%),
+    var(--bg-card);
+  border: 1px solid rgba(0,229,255,0.35);
+  border-radius: 14px;
+  padding: 36px 32px 28px;
+  max-width: 460px;
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow:
+    0 0 0 1px rgba(191,0,255,0.18),
+    0 18px 60px rgba(0,0,0,0.55),
+    0 0 40px rgba(0,229,255,0.18);
+  animation: modalRise 220ms var(--ease);
 }
-.modal-close {
+
+/* Cyber corner accents */
+.event-modal__corner {
   position: absolute;
-  top: 16px; right: 20px;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.event-modal__corner--tl { top: -1px; left: -1px;  border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); border-top-left-radius: 14px; }
+.event-modal__corner--tr { top: -1px; right: -1px; border-top: 2px solid var(--purple); border-right: 2px solid var(--purple); border-top-right-radius: 14px; }
+.event-modal__corner--bl { bottom: -1px; left: -1px;  border-bottom: 2px solid var(--purple); border-left: 2px solid var(--purple); border-bottom-left-radius: 14px; }
+.event-modal__corner--br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); border-bottom-right-radius: 14px; }
+
+.event-modal__close {
+  position: absolute;
+  top: 12px; right: 14px;
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 1.4rem;
-  cursor: pointer;
+  font-size: 1.6rem;
   line-height: 1;
-  padding: 4px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color var(--fast), background var(--fast);
 }
-.modal-close:hover { color: var(--white); }
-.modal-event-badge {
+.event-modal__close:hover { color: var(--cyan); background: rgba(0,229,255,0.08); }
+
+.event-modal__badge {
   display: inline-block;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 5px;
   font-family: var(--font-head);
   font-size: 0.6rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 12px;
+  letter-spacing: 0.14em;
+  margin-bottom: 14px;
 }
-.modal-event-badge.community { background: rgba(0,255,153,0.12); color: var(--green); border: 1px solid rgba(0,255,153,0.3); }
-.modal-event-badge.family    { background: rgba(191,0,255,0.12); color: #d966ff; border: 1px solid rgba(191,0,255,0.3); }
-.modal-event-badge.private   { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.3); }
-.modal-event-badge.special   { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
-.modal-box h2 { font-size: 1.2rem; color: var(--white); margin-bottom: 6px; }
-.modal-meta { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 8px; }
-.modal-desc { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; }
-.modal-reg-status {
-  display: flex; align-items: center; gap: 10px;
+.event-modal__badge.community { background: rgba(0,255,153,0.12); color: var(--green); border: 1px solid rgba(0,255,153,0.4); box-shadow: 0 0 12px rgba(0,255,153,0.18); }
+.event-modal__badge.family    { background: rgba(191,0,255,0.14); color: #d966ff;     border: 1px solid rgba(191,0,255,0.4); box-shadow: 0 0 12px rgba(191,0,255,0.20); }
+.event-modal__badge.private   { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.4); box-shadow: 0 0 12px rgba(255,214,0,0.18); }
+.event-modal__badge.special   { background: rgba(0,229,255,0.12); color: var(--cyan); border: 1px solid rgba(0,229,255,0.4); box-shadow: 0 0 12px rgba(0,229,255,0.20); }
+
+.event-modal__title {
+  font-family: var(--font-head);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.event-modal__meta {
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  text-shadow: 0 0 6px rgba(0,229,255,0.35);
+  padding: 10px 12px;
   background: rgba(0,229,255,0.05);
-  border: 1px solid rgba(0,229,255,0.15);
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 20px;
-  font-size: 0.86rem;
-  color: var(--text-muted);
+  border-left: 2px solid var(--cyan);
+  border-radius: 4px;
+  margin-bottom: 18px;
 }
-.modal-reg-status .reg-count-num { font-weight: 800; color: var(--cyan); font-family: var(--font-head); }
-.modal-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-.modal-form-label {
-  display: block; font-family: var(--font-head);
-  font-size: 0.6rem; letter-spacing: 0.12em;
-  color: var(--text-muted); text-transform: uppercase;
-  margin-bottom: 6px; margin-top: 14px;
+.event-modal__desc {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
 }
-.modal-form-label:first-of-type { margin-top: 0; }
-.modal-input {
-  width: 100%; background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border); border-radius: 8px;
-  color: var(--white); font-size: 0.9rem;
-  padding: 10px 14px; outline: none;
-  transition: border-color 0.2s; font-family: var(--font-body);
+.event-modal__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
-.modal-input:focus { border-color: rgba(0,229,255,0.45); }
-.modal-submit {
-  width: 100%; margin-top: 16px;
-  background: linear-gradient(135deg, var(--purple), var(--cyan));
-  color: #000; border: none; border-radius: 8px;
-  padding: 12px; font-size: 0.88rem; font-weight: 800;
-  font-family: var(--font-head); letter-spacing: 0.05em;
-  cursor: pointer; transition: opacity 0.15s;
+.event-modal__cta .btn { flex: 1; justify-content: center; min-width: 140px; }
+
+@keyframes modalFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-.modal-submit:hover { opacity: 0.9; }
-.modal-submit:disabled { opacity: 0.5; cursor: default; }
-.modal-msg { font-size: 0.84rem; margin-top: 10px; text-align: center; }
-.modal-msg.success { color: var(--green); }
-.modal-msg.error   { color: #ff6060; }
-.modal-full-msg { text-align: center; padding: 10px 0; }
-.modal-full-msg .check-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+@keyframes modalRise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-modal, .event-modal__box { animation: none; }
+}
 
 /* Event list items */
 .event-item {
@@ -1432,6 +1459,7 @@ section {
 .badge.community { background: rgba(0,255,153,0.1); color: var(--green); border: 1px solid rgba(0,255,153,0.25); }
 .badge.family     { background: rgba(191,0,255,0.1); color: #d966ff; border: 1px solid rgba(191,0,255,0.25); }
 .badge.private    { background: rgba(255,214,0,0.1); color: var(--yellow); border: 1px solid rgba(255,214,0,0.25); }
+.badge.special    { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.25); }
 .badge.recurring  { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.25); }
 
 /* ============================================================
