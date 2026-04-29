@@ -146,7 +146,7 @@
       <label for="ev-desc">Description (optional)</label>
       <textarea id="ev-desc" placeholder="Brief description..." maxlength="500"></textarea>
       <p class="hint">Capacity limits registrations. Leave blank for unlimited.</p>
-      <button class="btn btn-primary" onclick="createEvent()">Add to Calendar</button>
+      <button class="btn btn-primary" onclick="submitEvent()">Add to Calendar</button>
       <div id="create-msg" class="msg" style="display:none;"></div>
     </div>
 
@@ -285,7 +285,7 @@ async function removeReg(eventId, regId) {
   } catch { alert('Failed to remove registration.'); }
 }
 
-async function createEvent() {
+async function submitEvent() {
   const date = document.getElementById('ev-date').value;
   const title = document.getElementById('ev-title').value.trim();
   const type = document.getElementById('ev-type').value;
