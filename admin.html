@@ -457,6 +457,97 @@
         </div>
 
       </div>
+
+      <!-- RECURRING EVENTS -->
+      <div class="columns" style="margin-top:24px;">
+
+        <!-- Add Recurring -->
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Add Recurring Event</div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="rec-frequency">Frequency</label>
+              <select id="rec-frequency" onchange="updateRecForm()">
+                <option value="weekly">Weekly</option>
+                <option value="monthly_nth">Monthly (Nth weekday)</option>
+              </select>
+            </div>
+            <div>
+              <label for="rec-type">Type</label>
+              <select id="rec-type">
+                <option value="special">Special Event</option>
+                <option value="community">Community</option>
+                <option value="family">Family</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div id="rec-nth-wrap" style="display:none;">
+              <label for="rec-nth">Which Week</label>
+              <select id="rec-nth">
+                <option value="1">1st</option>
+                <option value="2">2nd</option>
+                <option value="3">3rd</option>
+                <option value="4">4th</option>
+                <option value="-1">Last</option>
+              </select>
+            </div>
+            <div>
+              <label for="rec-dow">Day of Week</label>
+              <select id="rec-dow">
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+            </div>
+          </div>
+          <label for="rec-title">Title</label>
+          <input type="text" id="rec-title" placeholder="e.g. Trivia Night" maxlength="100" />
+          <div class="grid-2">
+            <div>
+              <label for="rec-start">Start Time (optional)</label>
+              <input type="text" id="rec-start" placeholder="e.g. 7pm" maxlength="8" />
+            </div>
+            <div>
+              <label for="rec-end">End Time (optional)</label>
+              <input type="text" id="rec-end" placeholder="e.g. 10pm" maxlength="8" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label for="rec-startdate">Starts On (optional)</label>
+              <input type="date" id="rec-startdate" />
+            </div>
+            <div>
+              <label for="rec-enddate">Ends On (optional)</label>
+              <input type="date" id="rec-enddate" />
+            </div>
+          </div>
+          <label for="rec-desc">Description (optional)</label>
+          <textarea id="rec-desc" placeholder="Brief description..." maxlength="500"></textarea>
+          <button class="btn btn-primary" onclick="submitRecurring()">+ Add Recurring</button>
+          <div id="rec-create-msg" class="msg" style="display:none;"></div>
+          <div class="hint">Recurring events appear on every matching day in the public calendar.</div>
+        </div>
+
+        <!-- Recurring List -->
+        <div class="card fade-in">
+          <div class="card-header">
+            <div class="card-title">Recurring Events <span class="count" id="rec-count"></span></div>
+          </div>
+          <div id="rec-list" class="event-list">
+            <div class="empty">Loading…</div>
+          </div>
+        </div>
+
+      </div>
     </main>
   </div>
 </div>
@@ -504,6 +595,8 @@ function showDashboard() {
     document.getElementById('user-avatar').textContent = (creds.u[0] || 'A').toUpperCase();
   }
   loadEvents();
+  loadRecurring();
+  updateRecForm();
 }
 
 function setFilter(btn) {
@@ -668,6 +761,134 @@ function formatDate(iso) {
 
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Recurring events ─────────────────────────────────── */
+let allRecurring = [];
+
+const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const NTH_NAMES = { '1': '1st', '2': '2nd', '3': '3rd', '4': '4th', '-1': 'Last' };
+
+function updateRecForm() {
+  const freq = document.getElementById('rec-frequency').value;
+  document.getElementById('rec-nth-wrap').style.display = freq === 'monthly_nth' ? '' : 'none';
+}
+
+async function loadRecurring() {
+  const listEl = document.getElementById('rec-list');
+  try {
+    const res = await fetch('/api/recurring');
+    const list = await res.json();
+    allRecurring = Array.isArray(list) ? list : [];
+    renderRecurring();
+  } catch {
+    listEl.innerHTML = '<div class="empty" style="color:var(--red);">Failed to load recurring events.</div>';
+  }
+}
+
+function describeRule(r) {
+  const dow = DOW_NAMES[r.dayOfWeek] || '?';
+  if (r.frequency === 'weekly') return `Every ${dow}`;
+  if (r.frequency === 'monthly_nth') {
+    const n = NTH_NAMES[String(r.nth)] || '?';
+    return `${n} ${dow} of the month`;
+  }
+  return r.frequency;
+}
+
+function renderRecurring() {
+  const listEl = document.getElementById('rec-list');
+  const countEl = document.getElementById('rec-count');
+  countEl.textContent = `(${allRecurring.length})`;
+
+  if (!allRecurring.length) {
+    listEl.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">∅</div>
+        No recurring events yet. Add one to the left.
+      </div>`;
+    return;
+  }
+
+  const sorted = allRecurring.slice().sort((a, b) => {
+    if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+    return (a.title || '').localeCompare(b.title || '');
+  });
+
+  listEl.innerHTML = sorted.map(r => {
+    const cadence = describeRule(r);
+    const timeStr = r.startTime ? (r.endTime ? `${r.startTime} – ${r.endTime}` : r.startTime) : '';
+    const range = [];
+    if (r.startDate) range.push(`from ${r.startDate}`);
+    if (r.endDate) range.push(`until ${r.endDate}`);
+    const rangeStr = range.join(' ');
+    return `
+      <div class="event-row">
+        <div class="date-block">
+          <div class="date-month">${esc(cadence.split(' ')[0])}</div>
+          <div class="date-day" style="font-size:0.95rem;">${esc(DOW_NAMES[r.dayOfWeek].slice(0,3))}</div>
+        </div>
+        <div class="event-body">
+          <div class="event-title-row">
+            <div class="event-title">${esc(r.title)}</div>
+            <span class="pill pill-${esc(r.type)}">${esc(r.type)}</span>
+          </div>
+          <div class="event-time">${esc(cadence)}${timeStr ? ' · ' + esc(timeStr) : ''}</div>
+          ${rangeStr ? `<div class="event-time">${esc(rangeStr)}</div>` : ''}
+          ${r.description ? `<div class="event-desc">${esc(r.description)}</div>` : ''}
+        </div>
+        <div class="event-actions">
+          <button class="btn btn-sm btn-danger" onclick="deleteRecurring('${esc(r.id)}')">Delete</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function submitRecurring() {
+  const frequency = document.getElementById('rec-frequency').value;
+  const dayOfWeek = parseInt(document.getElementById('rec-dow').value, 10);
+  const nth = parseInt(document.getElementById('rec-nth').value, 10);
+  const title = document.getElementById('rec-title').value.trim();
+  const type = document.getElementById('rec-type').value;
+  const startTime = document.getElementById('rec-start').value.trim();
+  const endTime = document.getElementById('rec-end').value.trim();
+  const startDate = document.getElementById('rec-startdate').value;
+  const endDate = document.getElementById('rec-enddate').value;
+  const description = document.getElementById('rec-desc').value.trim();
+  const msgEl = document.getElementById('rec-create-msg');
+  msgEl.style.display = 'none';
+
+  if (!title) { showMsg(msgEl, 'error', 'Title is required.'); return; }
+
+  const body = { title, type, startTime, endTime, description, frequency, dayOfWeek, startDate, endDate };
+  if (frequency === 'monthly_nth') body.nth = nth;
+
+  try {
+    const res = await fetch('/api/recurring', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: authHeader() },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 401) { showMsg(msgEl, 'error', 'Session expired — sign out and back in.'); return; }
+    if (!res.ok) { const d = await res.json().catch(() => ({})); showMsg(msgEl, 'error', d.error || 'Failed to create recurring event.'); return; }
+    document.getElementById('rec-title').value = '';
+    document.getElementById('rec-start').value = '';
+    document.getElementById('rec-end').value = '';
+    document.getElementById('rec-startdate').value = '';
+    document.getElementById('rec-enddate').value = '';
+    document.getElementById('rec-desc').value = '';
+    showMsg(msgEl, 'success', 'Recurring event added.');
+    loadRecurring();
+  } catch { showMsg(msgEl, 'error', 'Failed to create recurring event.'); }
+}
+
+async function deleteRecurring(id) {
+  if (!confirm('Delete this recurring event? It will disappear from the calendar.')) return;
+  try {
+    const res = await fetch('/api/recurring/' + encodeURIComponent(id), { method: 'DELETE', headers: { Authorization: authHeader() } });
+    if (res.status === 401) { alert('Session expired — sign out and back in.'); return; }
+    if (res.ok) loadRecurring();
+  } catch { alert('Failed to delete recurring event.'); }
 }
 
 (function init() {

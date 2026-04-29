@@ -87,6 +87,13 @@
     }
   } catch { /* non-fatal */ }
 
+  /* Fetch admin-created recurring rules */
+  let recurringList = [];
+  try {
+    const res = await fetch('/api/recurring', { cache: 'no-store' });
+    if (res.ok) recurringList = await res.json();
+  } catch { /* non-fatal */ }
+
   renderUpcoming(customList);
 
   let viewYear, viewMonth;
@@ -100,6 +107,22 @@
       return `<span class="cal-event-pill ${escapeHtml(type)} clickable" data-event='${json}' tabindex="0" role="button">${safeLabel}${timeHtml}</span>`;
     }
     return `<span class="cal-event-pill ${escapeHtml(type)}">${safeLabel}${timeHtml}</span>`;
+  }
+
+  function ruleMatches(rule, year, month, day, dow, daysInMonth) {
+    if (rule.dayOfWeek !== dow) return false;
+    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (rule.startDate && dateKey < rule.startDate) return false;
+    if (rule.endDate && dateKey > rule.endDate) return false;
+    if (rule.frequency === 'weekly') return true;
+    if (rule.frequency === 'monthly_nth') {
+      if (rule.nth === -1) {
+        return day + 7 > daysInMonth;
+      }
+      const occurrence = Math.floor((day - 1) / 7) + 1;
+      return occurrence === rule.nth;
+    }
+    return false;
   }
 
   function render(year, month) {
@@ -161,6 +184,17 @@
           pills += pill(ev.type, ev.title, timeStr, ev);
         });
       }
+
+      recurringList.forEach(rule => {
+        if (!ruleMatches(rule, year, month, d, dow, daysInMonth)) return;
+        const timeStr = rule.startTime ? (rule.endTime ? `${rule.startTime}–${rule.endTime}` : rule.startTime) : '';
+        pills += pill(rule.type, rule.title, timeStr, {
+          title: rule.title, type: rule.type, date: dateKey,
+          startTime: rule.startTime || '', endTime: rule.endTime || '',
+          description: rule.description || '',
+          _info: true,
+        });
+      });
 
       html += `<div class="${classes}"><div class="cal-day__num">${d}</div>${pills}</div>`;
     }
