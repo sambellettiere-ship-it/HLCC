@@ -11,6 +11,7 @@ const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.join(__dirname, 'data');
 const EVENTS_FILE = path.join(DATA_DIR, 'events.json');
+const RECURRING_FILE = path.join(DATA_DIR, 'recurring.json');
 const OWNER_EMAIL = process.env.NOTIFY_EMAIL || 'hiddenlevelcu@gmail.com';
 
 app.use(express.json());
@@ -124,6 +125,67 @@ app.delete('/api/events/:id', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Event not found' });
   const [removed] = events.splice(idx, 1);
   writeJSON(EVENTS_FILE, events);
+  res.json(removed);
+});
+
+// ── Recurring events ──────────────────────────────────────────
+app.get('/api/recurring', (req, res) => {
+  res.json(readJSON(RECURRING_FILE, []));
+});
+
+app.post('/api/recurring', (req, res) => {
+  if (!checkAuth(req, res)) return;
+  const { title, description, type, startTime, endTime, frequency, dayOfWeek, nth, startDate, endDate } = req.body;
+  if (!title) return res.status(400).json({ error: 'title is required' });
+  if (frequency !== 'weekly' && frequency !== 'monthly_nth') {
+    return res.status(400).json({ error: 'frequency must be "weekly" or "monthly_nth"' });
+  }
+  const dow = Number(dayOfWeek);
+  if (!Number.isInteger(dow) || dow < 0 || dow > 6) {
+    return res.status(400).json({ error: 'dayOfWeek must be an integer 0–6 (Sun–Sat)' });
+  }
+  let nthVal = null;
+  if (frequency === 'monthly_nth') {
+    nthVal = Number(nth);
+    // Allow 1–4 or -1 (last occurrence in the month)
+    if (!Number.isInteger(nthVal) || (nthVal !== -1 && (nthVal < 1 || nthVal > 4))) {
+      return res.status(400).json({ error: 'nth must be 1, 2, 3, 4, or -1 (last)' });
+    }
+  }
+  if (startDate && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+    return res.status(400).json({ error: 'startDate must be YYYY-MM-DD' });
+  }
+  if (endDate && !/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+    return res.status(400).json({ error: 'endDate must be YYYY-MM-DD' });
+  }
+  const validTypes = ['community', 'family', 'private', 'special'];
+  const list = readJSON(RECURRING_FILE, []);
+  const rule = {
+    id: Date.now().toString(),
+    title: String(title).trim().slice(0, 100),
+    description: String(description || '').trim().slice(0, 500),
+    type: validTypes.includes(type) ? type : 'special',
+    startTime: String(startTime || '').trim().slice(0, 8),
+    endTime: String(endTime || '').trim().slice(0, 8),
+    frequency,
+    dayOfWeek: dow,
+    nth: nthVal,
+    startDate: startDate || '',
+    endDate: endDate || '',
+    createdAt: new Date().toISOString(),
+  };
+  list.push(rule);
+  writeJSON(RECURRING_FILE, list);
+  res.status(201).json(rule);
+});
+
+app.delete('/api/recurring/:id', (req, res) => {
+  if (!checkAuth(req, res)) return;
+  const list = readJSON(RECURRING_FILE, []);
+  const idx = list.findIndex(r => r.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Recurring event not found' });
+  const [removed] = list.splice(idx, 1);
+  writeJSON(RECURRING_FILE, list);
   res.json(removed);
 });
 
