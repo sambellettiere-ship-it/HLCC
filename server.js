@@ -7,7 +7,9 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, 'data');
 const EVENTS_FILE = path.join(DATA_DIR, 'events.json');
 const OWNER_EMAIL = process.env.NOTIFY_EMAIL || 'hiddenlevelcu@gmail.com';
 
@@ -171,4 +173,7 @@ app.get('/data/*', (req, res) => res.status(404).end());
 // Admin dashboard
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
-app.listen(PORT, () => console.log(`Hidden Level running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Hidden Level running on port ${PORT}`);
+  console.log(`Data directory: ${DATA_DIR}`);
+});
